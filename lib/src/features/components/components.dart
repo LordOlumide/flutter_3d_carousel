@@ -1,2 +1,3 @@
-export 'core_animation_widget.dart';
+export 'carousel_widget_3d.dart';
+export 'sub_widget.dart';
 
