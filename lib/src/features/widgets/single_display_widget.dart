@@ -20,7 +20,7 @@ class SingleDisplayWidget extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 50),
+        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 30),
         child: Column(
           children: [
             Container(
@@ -52,7 +52,7 @@ class SingleDisplayWidget extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => onBackPressed(),
+                  onPressed: () => onForwardPressed(),
                   icon: Icon(Icons.arrow_forward, size: 30),
                   color: UtilFunctions.getReverseContrastingColor(
                     backgroundColor,
@@ -79,7 +79,7 @@ class SingleDisplayWidget extends StatelessWidget {
               'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
               'Suspendisse augue libero, condimentum ut vestibulum vitae, '
               'gravida nec sem. Suspendisse sit amet rutrum lacus, et '
-              'varius enim. Duis ipsum diam, tincidunt sed sollicitudin',
+              'varius enim',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
