@@ -40,7 +40,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       value: 0.0,
       lowerBound: 0.0,
       upperBound: 2 * math.pi,
-      duration: const Duration(milliseconds: 5000),
+      duration: const Duration(milliseconds: 10000),
     );
     _controller.addListener(_controllerListener);
     _controller.repeat();
