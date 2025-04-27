@@ -23,6 +23,11 @@ class _HomeScreenState extends State<HomeScreen>
     (index) => (colors[index], 'assets/images/0${index + 1}.jpg'),
   );
 
+  bool isRotating = false;
+  bool isDragging = false;
+
+  double initialXPosition = 0;
+
   @override
   void initState() {
     super.initState();
@@ -51,80 +56,85 @@ class _HomeScreenState extends State<HomeScreen>
     });
   }
 
-  bool isRotating = false;
-
   void _rotateInfinitely() => _controller.repeat();
 
   void _stopInfiniteRotation() {
     animateToClosestStep();
   }
 
-  void animateToClosestStep() {
+  Future<void> animateToClosestStep() async {
     final int closestStep = (_controller.value / stepAngle).round();
     final double closestStepAngle = closestStep * stepAngle;
     if (closestStepAngle < _controller.value) {
-      animateBackTo(closestStepAngle, 100);
+      await animateBackTo(closestStepAngle, 100);
     } else {
-      animateForwardTo(closestStepAngle, 100);
+      await animateForwardTo(closestStepAngle, 100);
     }
   }
 
-  void animateToPreviousStep() {
+  Future<void> animateToPreviousStep() async {
     final int currentStep = (_controller.value / stepAngle).round();
     final int nextStep = currentStep - 1;
     final double nextAngle = nextStep * stepAngle;
-    animateBackTo(nextAngle);
+    await animateBackTo(nextAngle);
   }
 
-  void animateToNextStep() {
+  Future<void> animateToNextStep() async {
     final int currentStep = (_controller.value / stepAngle).round();
     final int nextStep = currentStep + 1;
     final double nextAngle = nextStep * stepAngle;
-    animateForwardTo(nextAngle);
+    await animateForwardTo(nextAngle);
   }
 
-  void animateBackTo(
+  Future<void> animateBackTo(
     double nextAngle, [
     int durationInMillis = animationTimeMillis,
-  ]) {
+  ]) async {
     if (nextAngle >= _controller.lowerBound) {
-      _controller.animateTo(
+      await _controller.animateTo(
         nextAngle,
         duration: Duration(milliseconds: durationInMillis),
       );
     } else {
-      _controller.animateTo(
+      await _controller.animateTo(
         _controller.lowerBound,
         duration: const Duration(milliseconds: 0),
       );
       _controller.value = _controller.upperBound;
-      _controller.animateTo(
+      await _controller.animateTo(
         nextAngle % (2 * math.pi),
         duration: Duration(milliseconds: durationInMillis),
       );
     }
   }
 
-  void animateForwardTo(
+  Future<void> animateForwardTo(
     double nextAngle, [
     int durationInMillis = animationTimeMillis,
-  ]) {
+  ]) async {
     if (nextAngle <= _controller.upperBound) {
-      _controller.animateTo(
+      await _controller.animateTo(
         nextAngle,
         duration: Duration(milliseconds: durationInMillis),
       );
     } else {
-      _controller.animateTo(
+      await _controller.animateTo(
         _controller.upperBound,
         duration: const Duration(milliseconds: 0),
       );
       _controller.value = _controller.lowerBound;
-      _controller.animateTo(
+      await _controller.animateTo(
         nextAngle % (2 * math.pi),
         duration: Duration(milliseconds: durationInMillis),
       );
     }
+  }
+
+  final double sensitivityFactor = 1.0;
+  double _getAngleInRadFromXMovement(double dx) {
+    // Length of an arc = r * theta  where (r = radius, theta = angle in radians)
+    final double radius = MediaQuery.sizeOf(context).width / 2;
+    return (dx / radius) * sensitivityFactor;
   }
 
   @override
@@ -134,18 +144,51 @@ class _HomeScreenState extends State<HomeScreen>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            CarouselWidget3D(
-              radius: MediaQuery.sizeOf(context).width,
-              childScale: 0.7,
-              stepAngle: stepAngle,
-              controller: _controller,
-              children: List.generate(
-                screens.length,
-                (index) => SingleDisplayWidget(
-                  backgroundColor: screens[index].$1,
-                  assetPath: screens[index].$2,
-                  onForwardPressed: animateToPreviousStep,
-                  onBackPressed: animateToNextStep,
+            GestureDetector(
+              onHorizontalDragStart: (details) {
+                initialXPosition = details.globalPosition.dx;
+                setState(() {
+                  isDragging = true;
+                });
+              },
+              onHorizontalDragUpdate: (details) {
+                final double xDrag =
+                    initialXPosition - details.globalPosition.dx;
+                initialXPosition = details.globalPosition.dx;
+                final double angleInRadian = _getAngleInRadFromXMovement(xDrag);
+
+                if (angleInRadian >= 0) {
+                  animateForwardTo(
+                    (_controller.value - angleInRadian) % (2 * math.pi),
+                    0,
+                  );
+                } else {
+                  animateBackTo(
+                    (_controller.value - angleInRadian) % (2 * math.pi),
+                    0,
+                  );
+                }
+              },
+              onHorizontalDragEnd: (details) {
+                animateToClosestStep().then((_) {
+                  setState(() {
+                    isDragging = false;
+                  });
+                });
+              },
+              child: CarouselWidget3D(
+                radius: MediaQuery.sizeOf(context).width,
+                childScale: 0.7,
+                stepAngle: stepAngle,
+                controller: _controller,
+                children: List.generate(
+                  screens.length,
+                  (index) => SingleDisplayWidget(
+                    backgroundColor: screens[index].$1,
+                    assetPath: screens[index].$2,
+                    onForwardPressed: animateToPreviousStep,
+                    onBackPressed: animateToNextStep,
+                  ),
                 ),
               ),
             ),
@@ -156,9 +199,13 @@ class _HomeScreenState extends State<HomeScreen>
                 children: [
                   IconButton(
                     onPressed:
-                        isRotating ? _stopInfiniteRotation : _rotateInfinitely,
+                        isRotating && !isDragging
+                            ? _stopInfiniteRotation
+                            : _rotateInfinitely,
                     icon: Icon(
-                      isRotating ? Icons.cancel_outlined : Icons.rotate_left,
+                      isRotating && !isDragging
+                          ? Icons.cancel_outlined
+                          : Icons.rotate_left,
                       size: 30,
                     ),
                   ),
