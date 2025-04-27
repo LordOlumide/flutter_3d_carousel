@@ -2,7 +2,7 @@
 
 This is a 3d carousel animation project built in flutter. The 3D carousel responds to button clicks and swipes and can rotate infinitely.
 
-It is implemented natively in flutter. No dependencies are used.
+It is implemented natively in flutter. No external dependencies are used.
 
 
 ## Screen Recording
