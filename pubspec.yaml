@@ -1,5 +1,5 @@
-name: _3d_onboarding_animation
-description: "A new Flutter project."
+name: _3d_carousel
+description: "A 3d carousel animation project built in flutter"
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 

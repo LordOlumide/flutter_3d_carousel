@@ -1,4 +1,4 @@
-# _3d_onboarding_animation
+# 3d_carousel
 
 This is a 3d carousel animation project built in flutter. The 3D carousel responds to button clicks and swipes and can rotate infinitely.
 

@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 
-import 'package:_3d_onboarding_animation/src/src.dart';
+import 'package:_3d_carousel/src/src.dart';
 import 'package:flutter/material.dart';
 
 class CarouselWidget3D extends StatelessWidget {

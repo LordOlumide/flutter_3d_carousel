@@ -1,4 +1,4 @@
-import 'package:_3d_onboarding_animation/src/features/features.dart';
+import 'package:_3d_carousel/src/features/features.dart';
 import 'package:flutter/material.dart';
 
 class MyApp extends StatelessWidget {

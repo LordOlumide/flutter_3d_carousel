@@ -1,6 +1,6 @@
 {
-    "name": "_3d_onboarding_animation",
-    "short_name": "_3d_onboarding_animation",
+    "name": "_3d_carousel",
+    "short_name": "_3d_carousel",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

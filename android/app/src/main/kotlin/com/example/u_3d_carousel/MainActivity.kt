@@ -1,4 +1,4 @@
-package com.example.u_3d_onboarding_animation
+package com.example.u_3d_carousel
 
 import io.flutter.embedding.android.FlutterActivity
 
