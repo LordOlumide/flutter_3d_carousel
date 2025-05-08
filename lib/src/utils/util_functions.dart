@@ -3,6 +3,14 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 abstract class UtilFunctions {
+  static double inDegrees(double radian) {
+    return radian * 180 / math.pi;
+  }
+
+  static double inRadian(double degree) {
+    return degree * math.pi / 180;
+  }
+
   static bool isBetween90And270Degrees(double angle) {
     return angle >= (math.pi / 2) && angle <= (3 * math.pi / 2);
   }

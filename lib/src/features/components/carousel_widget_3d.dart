@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui';
 
 import 'package:_3d_carousel/src/src.dart';
 import 'package:flutter/material.dart';
@@ -7,6 +8,8 @@ class CarouselWidget3D extends StatelessWidget {
   final double radius;
   final double childScale;
   final List<Widget> children;
+  final double backgroundBlur;
+  final Color blurColor;
   final double stepAngle;
   final AnimationController controller;
 
@@ -15,6 +18,8 @@ class CarouselWidget3D extends StatelessWidget {
     required this.radius,
     this.childScale = 0.5,
     required this.children,
+    this.backgroundBlur = 3,
+    this.blurColor = Colors.transparent,
     required this.stepAngle,
     required this.controller,
   });
@@ -39,6 +44,7 @@ class CarouselWidget3D extends StatelessWidget {
           children.length,
           (index) => double.parse(getOffsetAngle(index).toStringAsFixed(2)),
         );
+        print(UtilFunctions.inDegrees(angles[0]));
 
         return Stack(
           children: [
@@ -52,6 +58,14 @@ class CarouselWidget3D extends StatelessWidget {
                   yRotation: getYRotation(i),
                   child: children[i],
                 ),
+            BackdropFilter(
+              blendMode: BlendMode.srcATop,
+              filter: ImageFilter.blur(
+                sigmaX: backgroundBlur,
+                sigmaY: backgroundBlur,
+              ),
+              child: Container(color: blurColor),
+            ),
             for (int i = 0; i < children.length; i++)
               if (!UtilFunctions.isBetween90And270Degrees(angles[i]))
                 SubWidget(

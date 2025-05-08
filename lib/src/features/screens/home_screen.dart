@@ -177,12 +177,15 @@ class _HomeScreenState extends State<HomeScreen>
                 });
               },
               child: CarouselWidget3D(
-                radius: MediaQuery.sizeOf(context).width,
-                childScale: 0.7,
+                radius: MediaQuery.sizeOf(context).width / 2,
+                childScale: 0.5,
                 stepAngle: stepAngle,
                 controller: _controller,
+                backgroundBlur: 5,
+                blurColor: Colors.transparent,
                 children: List.generate(
-                  screens.length,
+                  // screens.length,
+                  1,
                   (index) => SingleDisplayWidget(
                     backgroundColor: screens[index].$1,
                     assetPath: screens[index].$2,
