@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:_3d_carousel/src/features/models/drag_behaviour.dart';
 import 'package:flutter/material.dart';
 import 'package:_3d_carousel/src/features/features.dart';
@@ -26,12 +24,17 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             GestureDetector(
               child: CarouselWidget3D(
-                radius: MediaQuery.sizeOf(context).width / 3,
+                radius: MediaQuery.sizeOf(context).width,
                 childScale: 0.7,
-                backgroundBlur: 5,
-                dragEndBehavior: DragEndBehavior.snapToNearest,
-                shouldRotateInfinitely: true,
+                backgroundBlur: 3,
+                dragEndBehavior: DragEndBehavior.continueRotating,
+                shouldRotate: false,
+                isDragInteractive: true,
                 spinWhileRotating: true,
+                timeForFullRevolution: 30000,
+                onValueChanged: (newValue) {
+                  print(newValue);
+                },
                 children: List.generate(
                   screens.length,
                   (index) => SingleDisplayWidget(
@@ -43,26 +46,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     onBackPressed: () {},
                   ),
                 ),
-              ),
-            ),
-            Positioned(
-              bottom: MediaQuery.sizeOf(context).height / 15,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // IconButton(
-                  //   onPressed:
-                  //       isRotating && !isDragging
-                  //           ? _stopInfiniteRotation
-                  //           : _rotateInfinitely,
-                  //   icon: Icon(
-                  //     isRotating && !isDragging
-                  //         ? Icons.cancel_outlined
-                  //         : Icons.rotate_left,
-                  //     size: 30,
-                  //   ),
-                  // ),
-                ],
               ),
             ),
           ],

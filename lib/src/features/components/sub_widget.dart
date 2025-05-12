@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+part of 'carousel_widget_3d.dart';
 
 class SubWidget extends StatelessWidget {
   final double scale;
@@ -6,6 +6,7 @@ class SubWidget extends StatelessWidget {
   final double xTranslation;
   final double zTranslation;
   final double yRotation;
+  final double perspectiveStrength;
   final Widget child;
 
   const SubWidget({
@@ -15,6 +16,7 @@ class SubWidget extends StatelessWidget {
     required this.xTranslation,
     required this.zTranslation,
     required this.yRotation,
+    required this.perspectiveStrength,
     required this.child,
   });
 
@@ -24,7 +26,7 @@ class SubWidget extends StatelessWidget {
       alignment: Alignment.center,
       transform:
           Matrix4.identity()
-            ..setEntry(3, 2, 0.001)
+            ..setEntry(3, 2, perspectiveStrength)
             ..translate(xTranslation, 0.0, zTranslation)
             ..rotateY(yRotation),
       child: Transform.scale(scale: scale, child: child),

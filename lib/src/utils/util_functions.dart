@@ -11,14 +11,6 @@ abstract class UtilFunctions {
     return degree * math.pi / 180;
   }
 
-  static bool isBetween90And270Degrees(double angle) {
-    return angle > 90 && angle < 270;
-  }
-
-  static bool isBetween90And270DegreesRad(double angleInRad) {
-    return angleInRad >= (math.pi / 2) && angleInRad <= (3 * math.pi / 2);
-  }
-
   static Color getContrastingColor(Color background) {
     // Calculate luminance (0.0 to 1.0)
     final luminance = background.computeLuminance();

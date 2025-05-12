@@ -11,11 +11,9 @@ It is implemented natively in flutter. No external dependencies are used.
 
 
 ## Features to add:
-- Support for anticlockwise rotation
-
-
-## Bugs to fix:
-- The widgets in the carousel shift from foreground to background at 90 and 270 degrees. However, due to the perspective added by `Matrix4.identity().setEntry(3, 2, 0.001)`, the widgets in the carousel "appear" to shift from foreground to background at about 83 degrees and about 276 degrees
+- Add support for anticlockwise rotation
+- Add Axis option to make it a vertical carousel
+- Add a way to stop and start the animation from outside the widget
 
 
 ## Contributing

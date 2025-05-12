@@ -20,7 +20,7 @@ class SingleDisplayWidget extends StatelessWidget {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 24, vertical: 30),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
         child: Column(
           children: [
             Container(
@@ -35,13 +35,13 @@ class SingleDisplayWidget extends StatelessWidget {
                 borderRadius: BorderRadius.circular(20),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
                   onPressed: () => onBackPressed(),
-                  icon: Icon(Icons.arrow_back, size: 30),
+                  icon: const Icon(Icons.arrow_back, size: 30),
                   color: UtilFunctions.getReverseContrastingColor(
                     backgroundColor,
                   ),
@@ -53,7 +53,7 @@ class SingleDisplayWidget extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () => onForwardPressed(),
-                  icon: Icon(Icons.arrow_forward, size: 30),
+                  icon: const Icon(Icons.arrow_forward, size: 30),
                   color: UtilFunctions.getReverseContrastingColor(
                     backgroundColor,
                   ),
@@ -65,7 +65,7 @@ class SingleDisplayWidget extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Lorem ipsum dolor sit amet',
               style: TextStyle(
@@ -74,7 +74,7 @@ class SingleDisplayWidget extends StatelessWidget {
                 color: UtilFunctions.getContrastingColor(backgroundColor),
               ),
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Text(
               'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
               'Suspendisse augue libero, condimentum ut vestibulum vitae, '
