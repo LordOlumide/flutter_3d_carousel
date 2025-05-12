@@ -1,7 +1,6 @@
-export 'components/carousel_widget_3d.dart';
-export 'components/sub_widget.dart';
+library;
 
-export 'utils/debouncer.dart';
-export 'utils/throttler.dart';
-export 'utils/util_functions.dart';
-
+export 'src/components/carousel_widget_3d.dart' show CarouselWidget3D;
+export 'src/models/drag_behaviour.dart' show DragEndBehavior;
+export 'src/models/tap_behavior.dart' show TapBehavior;
+export 'src/utils/util_functions.dart' show UtilFunctions;

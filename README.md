@@ -1,4 +1,4 @@
-# 3d_carousel
+# flutter_3d_carousel
 
 This is a 3d carousel animation project built in flutter. The 3D carousel responds to button clicks and swipes and can rotate infinitely.
 
@@ -8,6 +8,12 @@ It is implemented natively in flutter. No external dependencies are used.
 ## Screen Recording
 
 <img src="assets/gifs/recording_1.gif" width="350" alt="Screen recording of the animation"> 
+
+
+## Features to add:
+- Add support for anticlockwise rotation
+- Add Axis option to make it a vertical carousel
+- Add a way to stop and start the animation from outside the widget
 
 
 ## Contributing
