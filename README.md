@@ -5,6 +5,80 @@ This is a 3d carousel animation project built in flutter. The 3D carousel respon
 It is implemented natively in flutter. No external dependencies are used.
 
 
+## Example:
+
+Basic Example:
+```dart
+  @override
+  Widget build(BuildContext context) {
+    return CarouselWidget3D(
+      radius: MediaQuery.sizeOf(context).width,
+      children: List.generate(
+        6,
+        (index) => Container(
+          width: MediaQuery.sizeOf(context).width,
+          height: MediaQuery.sizeOf(context).height,
+          color: Colors.blue,
+        ),
+      ),
+    );
+  }
+```
+
+
+With full customization:
+```dart
+
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: CarouselWidget3D(
+          radius: MediaQuery.sizeOf(context).width,
+          childScale: 0.9,
+          backgroundBlur: 3,
+          dragEndBehavior: DragEndBehavior.snapToNearest,
+          tapBehavior: TapBehavior.startAndFreeze,
+          isDragInteractive: true,
+          shouldRotate: true,
+          spinWhileRotating: true,
+          timeForFullRevolution: 20000,
+          snapTimeInMillis: 100,
+          perspectiveStrength: 0.001,
+          dragSensitivity: 1.0,
+          onValueChanged: (newValue) {
+            // ignore: avoid_print
+            print(newValue);
+          },
+          children: List.generate(
+            colors.length,
+            (index) => Container(
+              width: MediaQuery.sizeOf(context).width,
+              height: MediaQuery.sizeOf(context).height,
+              color: colors[index],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+List<Color> colors = [
+  Colors.lightBlue,
+  Colors.greenAccent,
+  Colors.indigo,
+  Colors.grey,
+  Colors.yellow,
+  Colors.purple,
+];
+
+```
+
+
 ## Screen Recording
 
 <img src="assets/gifs/recording_1.gif" width="350" alt="Screen recording of the animation"> 

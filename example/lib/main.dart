@@ -45,7 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           children: List.generate(
             colors.length,
-                (index) => Container(
+            (index) => Container(
               width: MediaQuery.sizeOf(context).width,
               height: MediaQuery.sizeOf(context).height,
               color: colors[index],
