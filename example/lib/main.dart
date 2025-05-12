@@ -10,7 +10,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: HomeScreen());
+    return const MaterialApp(home: HomeScreen());
   }
 }
 
@@ -40,6 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
           perspectiveStrength: 0.001,
           dragSensitivity: 1.0,
           onValueChanged: (newValue) {
+            // ignore: avoid_print
             print(newValue);
           },
           children: List.generate(

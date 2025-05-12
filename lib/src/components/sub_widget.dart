@@ -10,7 +10,6 @@ class _SubWidget extends StatelessWidget {
   final Widget child;
 
   const _SubWidget({
-    super.key,
     required this.scale,
     required this.radius,
     required this.xTranslation,
