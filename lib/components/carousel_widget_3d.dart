@@ -275,7 +275,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
               // Back half of the carousel
               for (int i = 0; i < widget.children.length; i++)
                 if (indexToDistFrom180[i].$2 < 90)
-                  SubWidget(
+                  _SubWidget(
                     scale: widget.childScale,
                     radius: widget.radius,
                     perspectiveStrength: widget.perspectiveStrength,
@@ -299,7 +299,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
               // Front half of the carousel
               for (int i = 0; i < widget.children.length; i++)
                 if (indexToDistFrom180[i].$2 >= 90)
-                  SubWidget(
+                  _SubWidget(
                     scale: widget.childScale,
                     radius: widget.radius,
                     perspectiveStrength: widget.perspectiveStrength,

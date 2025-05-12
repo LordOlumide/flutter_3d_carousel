@@ -1,6 +1,6 @@
 part of 'carousel_widget_3d.dart';
 
-class SubWidget extends StatelessWidget {
+class _SubWidget extends StatelessWidget {
   final double scale;
   final double radius;
   final double xTranslation;
@@ -9,7 +9,7 @@ class SubWidget extends StatelessWidget {
   final double perspectiveStrength;
   final Widget child;
 
-  const SubWidget({
+  const _SubWidget({
     super.key,
     required this.scale,
     required this.radius,
