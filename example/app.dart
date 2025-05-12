@@ -1,5 +1,6 @@
-import 'package:_3d_carousel/src/features/features.dart';
 import 'package:flutter/material.dart';
+
+import 'home_screen.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -11,3 +12,4 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+

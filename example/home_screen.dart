@@ -1,7 +1,8 @@
 import 'dart:math' as math;
 
+import 'package:_3d_carousel/components/carousel_widget_3d.dart';
 import 'package:flutter/material.dart';
-import 'package:_3d_carousel/src/features/features.dart';
+import 'single_display_widget.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
