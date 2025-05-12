@@ -12,7 +12,11 @@ abstract class UtilFunctions {
   }
 
   static bool isBetween90And270Degrees(double angle) {
-    return angle >= (math.pi / 2) && angle <= (3 * math.pi / 2);
+    return angle > 90 && angle < 270;
+  }
+
+  static bool isBetween90And270DegreesRad(double angleInRad) {
+    return angleInRad >= (math.pi / 2) && angleInRad <= (3 * math.pi / 2);
   }
 
   static Color getContrastingColor(Color background) {
