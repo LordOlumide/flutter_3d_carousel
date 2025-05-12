@@ -1,8 +1,8 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:_3d_carousel/src/features/models/drag_behaviour.dart';
-import 'package:_3d_carousel/src/src.dart';
+import 'package:_3d_carousel/models/drag_behaviour.dart';
+import 'package:_3d_carousel/utils/util_functions.dart';
 import 'package:flutter/material.dart';
 
 part 'sub_widget.dart';
