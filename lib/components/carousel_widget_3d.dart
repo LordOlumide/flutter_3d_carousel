@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'dart:ui';
 
-import 'package:_3d_carousel/src/src.dart';
+import 'package:_3d_carousel/flutter_3d_carousel.dart';
 import 'package:flutter/material.dart';
 
 class CarouselWidget3D extends StatelessWidget {
