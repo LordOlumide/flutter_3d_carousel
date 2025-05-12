@@ -23,11 +23,10 @@ class _SubWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Transform(
       alignment: Alignment.center,
-      transform:
-          Matrix4.identity()
-            ..setEntry(3, 2, perspectiveStrength)
-            ..translate(xTranslation, 0.0, zTranslation)
-            ..rotateY(yRotation),
+      transform: Matrix4.identity()
+        ..setEntry(3, 2, perspectiveStrength)
+        ..translate(xTranslation, 0.0, zTranslation)
+        ..rotateY(yRotation),
       child: Transform.scale(scale: scale, child: child),
     );
   }

@@ -77,6 +77,7 @@ class CarouselWidget3D extends StatefulWidget {
   /// The list of widgets to display in the carousel. These will be evenly distributed around the circular path.
   final List<Widget> children;
 
+  /// Constructs a new [CarouselWidget3D] object.
   const CarouselWidget3D({
     super.key,
     required this.radius,
