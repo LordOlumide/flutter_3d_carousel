@@ -2,7 +2,7 @@ name: flutter_3d_carousel
 description: "An interactive 3D carousel widget with smooth animations, perspective transforms, and gesture controls for showcasing content in Flutter applications."
 repository: https://github.com/LordOlumide/flutter_3d_carousel/
 
-version: 1.0.1
+version: 1.0.2
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
