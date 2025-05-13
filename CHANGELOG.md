@@ -1,9 +1,8 @@
-## Version 1.0.0 - 2025-05-13
-**Initial Release**
+
+## Version 1.0.2 - 2025-05-13
 
 ### Added
-- Core widgets and functionality: CarouselWidget3D.
-- Example usage
+- Replaced asset screen recording gif in readme.
 
 
 ## Version 1.0.1 - 2025-05-13
@@ -14,7 +13,10 @@
 - Added code documentation to UtilFunctions
 
 
-## Version 1.0.2 - 2025-05-13
+## Version 1.0.0 - 2025-05-13
+**Initial Release**
 
 ### Added
-- Replaced asset screen recording gif in readme.
+- Core widgets and functionality: CarouselWidget3D.
+- Example usage
+
