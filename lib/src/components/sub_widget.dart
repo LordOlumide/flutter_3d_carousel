@@ -8,6 +8,7 @@ class _SubWidget extends StatelessWidget {
   final double yRotation;
   final double perspectiveStrength;
   final Widget child;
+  final VoidCallback onTap;
 
   const _SubWidget({
     required this.scale,
@@ -17,6 +18,7 @@ class _SubWidget extends StatelessWidget {
     required this.yRotation,
     required this.perspectiveStrength,
     required this.child,
+    required this.onTap,
   });
 
   @override
@@ -27,7 +29,13 @@ class _SubWidget extends StatelessWidget {
         ..setEntry(3, 2, perspectiveStrength)
         ..translate(xTranslation, 0.0, zTranslation)
         ..rotateY(yRotation),
-      child: Transform.scale(scale: scale, child: child),
+      child: Transform.scale(
+        scale: scale,
+        child: GestureDetector(
+          onTap: onTap,
+          child: child,
+        ),
+      ),
     );
   }
 }

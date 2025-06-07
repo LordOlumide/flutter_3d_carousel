@@ -31,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
           childScale: 0.9,
           backgroundBlur: 3,
           dragEndBehavior: DragEndBehavior.snapToNearest,
-          tapBehavior: TapBehavior.startAndFreeze,
+          backgroundTapBehavior: BackgroundTapBehavior.startAndFreeze,
           isDragInteractive: true,
           shouldRotate: true,
           spinWhileRotating: true,
@@ -45,10 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           children: List.generate(
             colors.length,
-            (index) => Container(
-              width: MediaQuery.sizeOf(context).width,
-              height: MediaQuery.sizeOf(context).height,
-              color: colors[index],
+            (index) => CarouselChild(
+              child: Container(
+                width: MediaQuery.sizeOf(context).width,
+                height: MediaQuery.sizeOf(context).height,
+                color: colors[index],
+              ),
+              onTap: () {},
             ),
           ),
         ),

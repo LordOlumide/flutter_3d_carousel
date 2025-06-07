@@ -2,9 +2,8 @@ import 'dart:math' as math;
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_3d_carousel/src/models/tap_behavior.dart';
-import '../models/drag_behaviour.dart';
-import '../utils/util_functions.dart';
+import 'package:flutter_3d_carousel/src/models/models.dart';
+import 'package:flutter_3d_carousel/src/utils/util_functions.dart';
 
 part 'sub_widget.dart';
 
@@ -24,15 +23,25 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to [DragEndBehavior.snapToNearest]
   final DragEndBehavior dragEndBehavior;
 
-  /// Determines how the carousel behaves after a tap. See [TapBehavior] for available options.
+  /// Determines how the carousel behaves after the background is tapped. See [BackgroundTapBehavior] for available options.
   ///
-  /// Defaults to [TapBehavior.startAndSnapToNearest]
-  final TapBehavior tapBehavior;
+  /// Defaults to [BackgroundTapBehavior.startAndSnapToNearest]
+  final BackgroundTapBehavior backgroundTapBehavior;
+
+  /// Determines how the carousel behaves after a child is tapped. See [ChildTapBehavior] for available options.
+  ///
+  /// Defaults to [ChildTapBehavior.stopAndSnapToChild]
+  final ChildTapBehavior childTapBehavior;
 
   /// Whether the carousel should respond to drag gestures.
   ///
   /// Defaults to true
   final bool isDragInteractive;
+
+  /// Whether only widgets in the front half of the carousel should be rendered
+  ///
+  /// Defaults to false
+  final bool onlyRenderForeground;
 
   /// The amount of blur effect applied to background children.
   ///
@@ -41,7 +50,7 @@ class CarouselWidget3D extends StatefulWidget {
 
   /// Whether the children of the carousel should spin with the carousel.
   /// If true, the children of the carousel will always be facing outwards from the center of the carousel.
-  /// If false, the children will always be facing forward.
+  /// If false, the children will always be facing forward (facing the camera or viewer).
   ///
   /// Defaults to true
   final bool spinWhileRotating;
@@ -71,20 +80,25 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to 1.0
   final double dragSensitivity;
 
-  /// Called whenever the internal AnimationController's value is updated with the new value. The internal AnimationController animates from 0 to 2 * pi.
+  /// Called whenever the internal AnimationController's value is updated with the new value.
+  /// The internal AnimationController animates from 0 to 2 * pi.
   final Function(double)? onValueChanged;
-
-  /// The list of widgets to display in the carousel. These will be evenly distributed around the circular path.
-  final List<Widget> children;
 
   /// A widget to fill the background with.
   ///
   /// **Note:** The blur effect is layered on top of the background.
-  /// Adjust the blur intensity accordingly to achieve the desired visual outcome.
+  /// Adjust the [backgroundBlur] property accordingly to achieve the desired visual outcome.
   ///
   /// If the `background` widget is an `Image`, ensure you set its `fit` property
   /// (e.g., `BoxFit.cover`) to control how the image scales and positions itself within the available space.
   final Widget? background;
+
+  /// A widget to render in the center between the front and back halves of the carousel.
+  /// **Note:** is not affected by [backgroundBlur] property.
+  final Widget? core;
+
+  /// The list of widgets to display in the carousel. These will be evenly distributed around the circular path.
+  final List<CarouselChild> children;
 
   /// Constructs a new [CarouselWidget3D] object.
   const CarouselWidget3D({
@@ -92,8 +106,10 @@ class CarouselWidget3D extends StatefulWidget {
     required this.radius,
     this.childScale = 0.5,
     this.isDragInteractive = true,
+    this.onlyRenderForeground = false,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
-    this.tapBehavior = TapBehavior.startAndSnapToNearest,
+    this.backgroundTapBehavior = BackgroundTapBehavior.startAndSnapToNearest,
+    this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
     this.backgroundBlur = 3.0,
     this.spinWhileRotating = true,
     this.shouldRotate = true,
@@ -102,8 +118,9 @@ class CarouselWidget3D extends StatefulWidget {
     this.perspectiveStrength = 0.001,
     this.dragSensitivity = 1.0,
     this.onValueChanged,
-    required this.children,
     this.background,
+    this.core,
+    required this.children,
   });
 
   @override
@@ -157,6 +174,13 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   }
 
   void _rotateInfinitely() => _controller.repeat();
+
+  Future<void> animateToStep(int index) async {
+    final double stepAngle = (2 * math.pi) - (index * _stepAngle);
+    print(index);
+    print(stepAngle);
+    await animateForwardTo(stepAngle, widget.snapTimeInMillis);
+  }
 
   Future<void> animateToClosestStep() async {
     final int closestStep = (_controller.value / _stepAngle).round();
@@ -249,15 +273,15 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: switch (widget.tapBehavior) {
-        TapBehavior.startAndFreeze => () {
+      onTap: switch (widget.backgroundTapBehavior) {
+        BackgroundTapBehavior.startAndFreeze => () {
             if (!isAnimating) {
               _rotateInfinitely();
             } else {
               _controller.value = _controller.value;
             }
           },
-        TapBehavior.startAndSnapToNearest => () {
+        BackgroundTapBehavior.startAndSnapToNearest => () {
             if (!isAnimating) {
               _rotateInfinitely();
             } else {
@@ -334,28 +358,43 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                   Positioned.fill(child: widget.background!),
 
                 // Back half of the carousel
-                for (int i = 0; i < widget.children.length; i++)
-                  if (indexToDistFrom180[i].$2 < 90)
-                    _SubWidget(
-                      scale: widget.childScale,
-                      radius: widget.radius,
-                      perspectiveStrength: widget.perspectiveStrength,
-                      xTranslation: getXTranslation(getIndexOf(i)),
-                      zTranslation:
-                          widget.radius - getZTranslation(getIndexOf(i)),
-                      yRotation: getYRotation(getIndexOf(i)),
-                      child: widget.children[getIndexOf(i)],
-                    ),
+                if (!widget.onlyRenderForeground)
+                  for (int i = 0; i < widget.children.length; i++)
+                    if (indexToDistFrom180[i].$2 < 90)
+                      _SubWidget(
+                        scale: widget.childScale,
+                        radius: widget.radius,
+                        perspectiveStrength: widget.perspectiveStrength,
+                        xTranslation: getXTranslation(getIndexOf(i)),
+                        zTranslation:
+                            widget.radius - getZTranslation(getIndexOf(i)),
+                        yRotation: getYRotation(getIndexOf(i)),
+                        child: widget.children[getIndexOf(i)].child,
+                        onTap: () {
+                          animateToStep(getIndexOf(i));
+                          widget.children[getIndexOf(i)].onTap();
+                        },
+                      ),
 
                 // Then, render the blur
-                BackdropFilter(
-                  blendMode: BlendMode.srcATop,
-                  filter: ImageFilter.blur(
-                    sigmaX: widget.backgroundBlur,
-                    sigmaY: widget.backgroundBlur,
+                IgnorePointer(
+                  ignoring: true,
+                  child: BackdropFilter(
+                    blendMode: BlendMode.srcATop,
+                    filter: ImageFilter.blur(
+                      sigmaX: widget.backgroundBlur,
+                      sigmaY: widget.backgroundBlur,
+                    ),
+                    child: const ColoredBox(color: Colors.transparent),
                   ),
-                  child: const ColoredBox(color: Colors.transparent),
                 ),
+
+                // Core widget
+                if (widget.core != null)
+                  AbsorbPointer(
+                    absorbing: true,
+                    child: widget.core!,
+                  ),
 
                 // Front half of the carousel
                 for (int i = 0; i < widget.children.length; i++)
@@ -368,7 +407,11 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       zTranslation: widget.radius -
                           getZTranslation(indexToDistFrom180[i].$1),
                       yRotation: getYRotation(indexToDistFrom180[i].$1),
-                      child: widget.children[indexToDistFrom180[i].$1],
+                      child: widget.children[indexToDistFrom180[i].$1].child,
+                      onTap: () {
+                        animateToStep(getIndexOf(i));
+                        widget.children[getIndexOf(i)].onTap();
+                      },
                     ),
               ],
             ),

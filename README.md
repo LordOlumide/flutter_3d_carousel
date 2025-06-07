@@ -90,10 +90,8 @@ Ideas and feature requests are welcome. Here are some ideas for future updates:
 - Add Axis option to make it a vertical carousel
 - Add a way to stop and start the animation from outside the widget
 - Add multiple ways for the widgets to spin while rotating. For example, an option would be that when the carousel revolves once, each widget will spin twice. Or the spin direction will change when they pass the center of focus.
-- Add option to only render elements in the foreground.
-- Add option to set a background widget
-- Add option to pass a widget between the foreground and the background
-- 2d carousel where the items move on a straight line
+- 2d carousel where the items move on a straight line (slideshow)
+- Add option to add only some of the children to the carousel. For example, 100 children, show 12.
 
 
 ## Contributing

@@ -1,5 +1,5 @@
-/// Defines how the carousel responds to tap gestures.
-enum TapBehavior {
+/// Defines how the carousel responds when the background is tapped.
+enum BackgroundTapBehavior {
   /// If the carousel was not rotating, it starts rotating.
   /// If the carousel was rotating, it stops rotating and snaps to the nearest node.
   startAndSnapToNearest,
