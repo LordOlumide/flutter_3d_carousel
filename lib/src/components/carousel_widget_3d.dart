@@ -77,6 +77,15 @@ class CarouselWidget3D extends StatefulWidget {
   /// The list of widgets to display in the carousel. These will be evenly distributed around the circular path.
   final List<Widget> children;
 
+  /// A widget to fill the background with.
+  ///
+  /// **Note:** The blur effect is layered on top of the background.
+  /// Adjust the blur intensity accordingly to achieve the desired visual outcome.
+  ///
+  /// If the `background` widget is an `Image`, ensure you set its `fit` property
+  /// (e.g., `BoxFit.cover`) to control how the image scales and positions itself within the available space.
+  final Widget? background;
+
   /// Constructs a new [CarouselWidget3D] object.
   const CarouselWidget3D({
     super.key,
@@ -94,6 +103,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.dragSensitivity = 1.0,
     this.onValueChanged,
     required this.children,
+    this.background,
   });
 
   @override
@@ -309,51 +319,59 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
           int getIndexOf(int index) => indexToDistFrom180[index].$1;
 
-          return Stack(
-            children: [
-              // To enable dragging on the background
-              const Positioned.fill(
-                child: ColoredBox(color: Colors.transparent),
-              ),
-
-              // Back half of the carousel
-              for (int i = 0; i < widget.children.length; i++)
-                if (indexToDistFrom180[i].$2 < 90)
-                  _SubWidget(
-                    scale: widget.childScale,
-                    radius: widget.radius,
-                    perspectiveStrength: widget.perspectiveStrength,
-                    xTranslation: getXTranslation(getIndexOf(i)),
-                    zTranslation:
-                        widget.radius - getZTranslation(getIndexOf(i)),
-                    yRotation: getYRotation(getIndexOf(i)),
-                    child: widget.children[getIndexOf(i)],
-                  ),
-
-              // Then, render the blur
-              BackdropFilter(
-                blendMode: BlendMode.srcATop,
-                filter: ImageFilter.blur(
-                  sigmaX: widget.backgroundBlur,
-                  sigmaY: widget.backgroundBlur,
+          return SizedBox(
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // To enable dragging on the empty background
+                const Positioned.fill(
+                  child: ColoredBox(color: Colors.transparent),
                 ),
-                child: const ColoredBox(color: Colors.transparent),
-              ),
 
-              // Front half of the carousel
-              for (int i = 0; i < widget.children.length; i++)
-                if (indexToDistFrom180[i].$2 >= 90)
-                  _SubWidget(
-                    scale: widget.childScale,
-                    radius: widget.radius,
-                    perspectiveStrength: widget.perspectiveStrength,
-                    xTranslation: getXTranslation(indexToDistFrom180[i].$1),
-                    zTranslation: widget.radius -
-                        getZTranslation(indexToDistFrom180[i].$1),
-                    yRotation: getYRotation(indexToDistFrom180[i].$1),
-                    child: widget.children[indexToDistFrom180[i].$1],
+                // Background widget
+                if (widget.background != null)
+                  Positioned.fill(child: widget.background!),
+
+                // Back half of the carousel
+                for (int i = 0; i < widget.children.length; i++)
+                  if (indexToDistFrom180[i].$2 < 90)
+                    _SubWidget(
+                      scale: widget.childScale,
+                      radius: widget.radius,
+                      perspectiveStrength: widget.perspectiveStrength,
+                      xTranslation: getXTranslation(getIndexOf(i)),
+                      zTranslation:
+                          widget.radius - getZTranslation(getIndexOf(i)),
+                      yRotation: getYRotation(getIndexOf(i)),
+                      child: widget.children[getIndexOf(i)],
+                    ),
+
+                // Then, render the blur
+                BackdropFilter(
+                  blendMode: BlendMode.srcATop,
+                  filter: ImageFilter.blur(
+                    sigmaX: widget.backgroundBlur,
+                    sigmaY: widget.backgroundBlur,
                   ),
-            ],
+                  child: const ColoredBox(color: Colors.transparent),
+                ),
+
+                // Front half of the carousel
+                for (int i = 0; i < widget.children.length; i++)
+                  if (indexToDistFrom180[i].$2 >= 90)
+                    _SubWidget(
+                      scale: widget.childScale,
+                      radius: widget.radius,
+                      perspectiveStrength: widget.perspectiveStrength,
+                      xTranslation: getXTranslation(indexToDistFrom180[i].$1),
+                      zTranslation: widget.radius -
+                          getZTranslation(indexToDistFrom180[i].$1),
+                      yRotation: getYRotation(indexToDistFrom180[i].$1),
+                      child: widget.children[indexToDistFrom180[i].$1],
+                    ),
+              ],
+            ),
           );
         },
       ),
