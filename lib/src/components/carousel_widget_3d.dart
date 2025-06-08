@@ -9,6 +9,9 @@ part 'sub_widget.dart';
 
 /// A 3D carousel widget that displays children in a circular arrangement with
 /// 3D perspective effects and interactive rotation.
+///
+/// **Note:** The [CarouselChild.onTap] will be called no matter what value is assigned to [childTapBehavior].
+/// The [childTapBehavior] defines how the carousel will animate when a child is tapped.
 class CarouselWidget3D extends StatefulWidget {
   /// The radius of the circular carousel in logical pixels. Determines the radius about which the children spin.
   final double radius;
@@ -209,9 +212,8 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     double nextAngle, [
     int durationInMillis = animationTimeMillis,
   ]) async {
-    // This condition determines if the direct linear path between _controller.value and nextAngle
-    // is shorter than half the circle (pi radians or 180 degrees).
-    // If true, directly animate to nextAngle
+    // If the direct linear path between _controller.value and nextAngle
+    // is shorter than half the circle (pi radians), directly animate to nextAngle
     if ((_controller.value - nextAngle).abs() < math.pi) {
       await _controller.animateTo(
         nextAngle,
@@ -272,23 +274,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: switch (widget.backgroundTapBehavior) {
-        BackgroundTapBehavior.startAndFreeze => () {
-            if (!isAnimating) {
-              _rotateInfinitely();
-            } else {
-              _controller.value = _controller.value;
-            }
-          },
-        BackgroundTapBehavior.startAndSnapToNearest => () {
-            if (!isAnimating) {
-              _rotateInfinitely();
-            } else {
-              animateToClosestStep();
-            }
-          },
-        _ => () {},
-      },
+      onTap: _onBackgroundTap,
       onHorizontalDragStart: widget.isDragInteractive
           ? (details) {
               initialXPosition = details.globalPosition.dx;
@@ -364,8 +350,19 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                         yRotation: getYRotation(getIndexOf(i)),
                         child: widget.children[getIndexOf(i)].child,
                         onTap: () {
-                          animateToStep(getIndexOf(i));
-                          widget.children[getIndexOf(i)].onTap();
+                          switch (widget.childTapBehavior) {
+                            case ChildTapBehavior.doNothing:
+                              break;
+                            case ChildTapBehavior.transparent:
+                              _onBackgroundTap();
+                              break;
+                            case ChildTapBehavior.stopAndSnapToChild:
+                              animateToStep(getIndexOf(i));
+                              break;
+                          }
+                          if (widget.children[getIndexOf(i)].onTap != null) {
+                            widget.children[getIndexOf(i)].onTap!();
+                          }
                         },
                       ),
 
@@ -402,8 +399,19 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       yRotation: getYRotation(indexToDistFrom180[i].$1),
                       child: widget.children[indexToDistFrom180[i].$1].child,
                       onTap: () {
-                        animateToStep(getIndexOf(i));
-                        widget.children[getIndexOf(i)].onTap();
+                        switch (widget.childTapBehavior) {
+                          case ChildTapBehavior.doNothing:
+                            break;
+                          case ChildTapBehavior.transparent:
+                            _onBackgroundTap();
+                            break;
+                          case ChildTapBehavior.stopAndSnapToChild:
+                            animateToStep(getIndexOf(i));
+                            break;
+                        }
+                        if (widget.children[getIndexOf(i)].onTap != null) {
+                          widget.children[getIndexOf(i)].onTap!();
+                        }
                       },
                     ),
               ],
@@ -412,5 +420,26 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
         },
       ),
     );
+  }
+
+  void _onBackgroundTap() {
+    switch (widget.backgroundTapBehavior) {
+      case BackgroundTapBehavior.startAndSnapToNearest:
+        if (!isAnimating) {
+          _rotateInfinitely();
+        } else {
+          animateToClosestStep();
+        }
+        break;
+      case BackgroundTapBehavior.startAndFreeze:
+        if (!isAnimating) {
+          _rotateInfinitely();
+        } else {
+          _controller.value = _controller.value;
+        }
+        break;
+      case BackgroundTapBehavior.none:
+        break;
+    }
   }
 }

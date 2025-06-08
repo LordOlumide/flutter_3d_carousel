@@ -7,55 +7,73 @@ It is implemented natively in flutter. No external dependencies are used.
 
 ## Example:
 
-Basic Example:
+### Basic Example:
+
 ```dart
   @override
   Widget build(BuildContext context) {
     return CarouselWidget3D(
-      radius: MediaQuery.sizeOf(context).width,
-      children: List.generate(
-        6,
-        (index) => Container(
-          width: MediaQuery.sizeOf(context).width,
-          height: MediaQuery.sizeOf(context).height,
-          color: Colors.blue,
-        ),
-      ),
+      radius: MediaQuery.sizeOf(context).width / 2,
+      children: List.generate(6, (index) {
+        return CarouselChild(
+          child: Container(
+            width: 300,
+            height: 300,
+            color: colors[index],
+          ),
+        );
+      }),
     );
   }
+
+  List<Color> colors = [
+    Colors.lightBlue,
+    Colors.greenAccent,
+    Colors.indigo,
+    Colors.grey,
+    Colors.yellow,
+    Colors.purple,
+  ];
 ```
 
 
-With full customization:
-```dart
+### Example 1
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_3d_carousel/flutter_3d_carousel.dart';
+
+class Example1 extends StatelessWidget {
+  const Example1({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: CarouselWidget3D(
-          radius: MediaQuery.sizeOf(context).width,
-          childScale: 0.9,
-          backgroundBlur: 3,
-          dragEndBehavior: DragEndBehavior.snapToNearest,
-          tapBehavior: TapBehavior.startAndFreeze,
-          isDragInteractive: true,
-          shouldRotate: true,
-          spinWhileRotating: true,
-          timeForFullRevolution: 20000,
-          snapTimeInMillis: 100,
-          perspectiveStrength: 0.001,
-          dragSensitivity: 1.0,
-          onValueChanged: (newValue) {
-            // ignore: avoid_print
-            print(newValue);
-          },
-          children: List.generate(
-            colors.length,
-            (index) => Container(
+      body: CarouselWidget3D(
+        radius: MediaQuery.sizeOf(context).width,
+        childScale: 0.9,
+        dragEndBehavior: DragEndBehavior.snapToNearest,
+        backgroundTapBehavior: BackgroundTapBehavior.startAndSnapToNearest,
+        childTapBehavior: ChildTapBehavior.transparent,
+        isDragInteractive: true,
+        onlyRenderForeground: false,
+        clockwise: false,
+        backgroundBlur: 3,
+        spinWhileRotating: true,
+        shouldRotate: true,
+        timeForFullRevolution: 20000,
+        snapTimeInMillis: 100,
+        perspectiveStrength: 0.001,
+        dragSensitivity: 1.0,
+        onValueChanged: (newValue) {
+          print(newValue);
+        },
+        background: null,
+        core: null,
+        children: List.generate(
+          colors.length,
+              (index) => CarouselChild(
+            child: Container(
               width: MediaQuery.sizeOf(context).width,
               height: MediaQuery.sizeOf(context).height,
               color: colors[index],
@@ -78,17 +96,128 @@ List<Color> colors = [
 
 ```
 
+### Example 1 Screen Recording
 
-## Screen Recording
+<img src="assets/gifs/recording_1.gif" width="350" alt="Screen recording of Example 1"> 
 
-<img src="assets/gifs/recording_1.gif" width="350" alt="Screen recording of the animation"> 
+
+### Example 2
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_3d_carousel/flutter_3d_carousel.dart';
+
+class Example2 extends StatefulWidget {
+  const Example2({super.key});
+
+  @override
+  State<Example2> createState() => _Example2State();
+}
+
+class _Example2State extends State<Example2> {
+  Color? selectedColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(child: Container(color: Colors.blue)),
+          Expanded(
+            child: CarouselWidget3D(
+              radius: MediaQuery.sizeOf(context).width / 2,
+              childScale: 0.7,
+              dragEndBehavior: DragEndBehavior.snapToNearest,
+              backgroundTapBehavior:
+                  BackgroundTapBehavior.startAndSnapToNearest,
+              childTapBehavior: ChildTapBehavior.stopAndSnapToChild,
+              isDragInteractive: true,
+              onlyRenderForeground: false,
+              clockwise: false,
+              backgroundBlur: 3,
+              spinWhileRotating: false,
+              shouldRotate: true,
+              timeForFullRevolution: 12000,
+              snapTimeInMillis: 100,
+              perspectiveStrength: 0.001,
+              dragSensitivity: 1.5,
+              onValueChanged: (newValue) {
+                // print(newValue);
+              },
+              background: Image.asset(
+                'assets/images/background_1.jpg',
+                fit: BoxFit.cover,
+              ),
+              core: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.yellow,
+                ),
+              ),
+              children: List.generate(colors.length, (index) {
+                return CarouselChild(
+                  child: Container(
+                    width: MediaQuery.sizeOf(context).width / 3,
+                    height: MediaQuery.sizeOf(context).height / 3,
+                    decoration: BoxDecoration(
+                      color: colors[index],
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  onTap: () {
+                    setState(() {
+                      selectedColor = colors[index];
+                    });
+                  },
+                );
+              }),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              color: Colors.indigo,
+              alignment: Alignment.center,
+              child: Container(
+                width: 150,
+                height: 150,
+                color: selectedColor ?? Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+List<Color> colors = [
+  Colors.lightBlue,
+  Colors.greenAccent,
+  Colors.teal,
+  Colors.grey,
+  Colors.orangeAccent,
+  Colors.purple,
+  Colors.red,
+  Colors.brown,
+  Colors.pink,
+];
+
+```
+
+### Example 2 Screen Recording
+
+<img src="assets/gifs/recording_2.gif" width="350" alt="Screen recording of Example 2"> 
+
 
 
 ## Ideas for features to add:
+
 Ideas and feature requests are welcome. Here are some ideas for future updates:
-- Add support for anticlockwise rotation
+
 - Add Axis option to make it a vertical carousel
-- Add a way to stop and start the animation from outside the widget
+- Expose a function to stop and start the animation manually
 - Add multiple ways for the widgets to spin while rotating. For example, an option would be that when the carousel revolves once, each widget will spin twice. Or the spin direction will change when they pass the center of focus.
 - 2d carousel where the items move on a straight line (slideshow)
 - Add option to add only some of the children to the carousel. For example, 100 children, show 12.

@@ -2,6 +2,8 @@
 ## Version 1.0.3 - 
 
 ### Changes:
+- Implemented anticlockwise rotation and added `clockwise` property.
+- Changed `List<Widget> children` to `List<CarouselChild> children`.
 - Added widget property `background`.
 - Added bool property `onlyRenderForeground`,
 - Changed `TapBehavior` to `BackgroundTapBehavior` and `tapBehavior` to `backgroundTapBehavior`.
