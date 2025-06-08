@@ -1,5 +1,5 @@
 
-## Version 1.0.3 - 
+## Version 2.0.0 - 2025-06-08
 
 ### Changes:
 - Implemented anticlockwise rotation and added `clockwise` property.
