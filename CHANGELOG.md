@@ -1,4 +1,11 @@
 
+## Version 2.0.1 - 2025-06-09
+
+### Changes
+- Fixed formatting issues.
+- Fixed example
+
+
 ## Version 2.0.0 - 2025-06-08
 
 ### Changes:
