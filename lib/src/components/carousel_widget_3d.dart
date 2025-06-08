@@ -43,6 +43,10 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to false
   final bool onlyRenderForeground;
 
+  /// Whether the carousel rotates in the clockwise direction when observed from the top.
+  /// Defaults to false
+  final bool clockwise;
+
   /// The amount of blur effect applied to background children.
   ///
   /// Defaults to 3.0
@@ -94,7 +98,7 @@ class CarouselWidget3D extends StatefulWidget {
   final Widget? background;
 
   /// A widget to render in the center between the front and back halves of the carousel.
-  /// **Note:** is not affected by [backgroundBlur] property.
+  /// **Note:** Is not affected by [backgroundBlur] property.
   final Widget? core;
 
   /// The list of widgets to display in the carousel. These will be evenly distributed around the circular path.
@@ -105,11 +109,12 @@ class CarouselWidget3D extends StatefulWidget {
     super.key,
     required this.radius,
     this.childScale = 0.5,
-    this.isDragInteractive = true,
-    this.onlyRenderForeground = false,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
     this.backgroundTapBehavior = BackgroundTapBehavior.startAndSnapToNearest,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
+    this.isDragInteractive = true,
+    this.onlyRenderForeground = false,
+    this.clockwise = false,
     this.backgroundBlur = 3.0,
     this.spinWhileRotating = true,
     this.shouldRotate = true,
@@ -177,75 +182,67 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
   Future<void> animateToStep(int index) async {
     final double stepAngle = (2 * math.pi) - (index * _stepAngle);
-    print(index);
-    print(stepAngle);
-    await animateForwardTo(stepAngle, widget.snapTimeInMillis);
+    await animateTo(stepAngle, widget.snapTimeInMillis);
   }
 
   Future<void> animateToClosestStep() async {
     final int closestStep = (_controller.value / _stepAngle).round();
     final double closestStepAngle = closestStep * _stepAngle;
-    if (closestStepAngle < _controller.value) {
-      await animateBackTo(closestStepAngle, widget.snapTimeInMillis);
-    } else {
-      await animateForwardTo(closestStepAngle, widget.snapTimeInMillis);
-    }
+    await animateTo(closestStepAngle, widget.snapTimeInMillis);
   }
 
   Future<void> animateToPreviousStep() async {
     final int currentStep = (_controller.value / _stepAngle).round();
     final int nextStep = currentStep - 1;
     final double nextAngle = nextStep * _stepAngle;
-    await animateBackTo(nextAngle);
+    await animateTo(nextAngle);
   }
 
   Future<void> animateToNextStep() async {
     final int currentStep = (_controller.value / _stepAngle).round();
     final int nextStep = currentStep + 1;
     final double nextAngle = nextStep * _stepAngle;
-    await animateForwardTo(nextAngle);
+    await animateTo(nextAngle);
   }
 
-  Future<void> animateBackTo(
+  Future<void> animateTo(
     double nextAngle, [
     int durationInMillis = animationTimeMillis,
   ]) async {
-    if (nextAngle >= _controller.lowerBound) {
+    // This condition determines if the direct linear path between _controller.value and nextAngle
+    // is shorter than half the circle (pi radians or 180 degrees).
+    // If true, directly animate to nextAngle
+    if ((_controller.value - nextAngle).abs() < math.pi) {
       await _controller.animateTo(
         nextAngle,
         duration: Duration(milliseconds: durationInMillis),
       );
     } else {
-      await _controller.animateTo(
-        _controller.lowerBound,
-        duration: const Duration(milliseconds: 0),
-      );
-      _controller.value = _controller.upperBound;
-      await _controller.animateTo(
-        nextAngle % (2 * math.pi),
-        duration: Duration(milliseconds: durationInMillis),
-      );
-    }
-  }
-
-  Future<void> animateForwardTo(
-    double nextAngle, [
-    int durationInMillis = animationTimeMillis,
-  ]) async {
-    if (nextAngle <= _controller.upperBound) {
+      late final double duration1;
+      if (_controller.value <= math.pi) {
+        duration1 = durationInMillis *
+            ((_controller.value - _controller.lowerBound) /
+                ((_controller.value - _controller.lowerBound) +
+                    (_controller.upperBound - nextAngle)));
+        await _controller.animateTo(
+          _controller.lowerBound,
+          duration: Duration(milliseconds: duration1.round()),
+        );
+        _controller.value = _controller.upperBound;
+      } else {
+        duration1 = durationInMillis *
+            ((_controller.upperBound - _controller.value) /
+                ((_controller.upperBound - _controller.value) +
+                    (nextAngle - _controller.lowerBound)));
+        await _controller.animateTo(
+          _controller.upperBound,
+          duration: Duration(milliseconds: duration1.round()),
+        );
+        _controller.value = _controller.lowerBound;
+      }
       await _controller.animateTo(
         nextAngle,
-        duration: Duration(milliseconds: durationInMillis),
-      );
-    } else {
-      await _controller.animateTo(
-        _controller.upperBound,
-        duration: const Duration(milliseconds: 0),
-      );
-      _controller.value = _controller.lowerBound;
-      await _controller.animateTo(
-        nextAngle % (2 * math.pi),
-        duration: Duration(milliseconds: durationInMillis),
+        duration: Duration(milliseconds: durationInMillis - duration1.round()),
       );
     }
   }
@@ -262,7 +259,9 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       (_controller.value + (index * _stepAngle)) % (2 * math.pi);
 
   double getXTranslation(int index) =>
-      widget.radius * math.sin(getOffsetAngle(index));
+      widget.radius *
+      math.sin(getOffsetAngle(index)) *
+      (widget.clockwise ? -1 : 1);
 
   double getZTranslation(int index) =>
       widget.radius * math.cos(getOffsetAngle(index));
@@ -299,19 +298,13 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
           ? (details) {
               final double xDrag = initialXPosition - details.globalPosition.dx;
               initialXPosition = details.globalPosition.dx;
-              final double angleInRadian = _getAngleInRadFromXMovement(xDrag);
-
-              if (angleInRadian >= 0) {
-                animateForwardTo(
-                  (_controller.value - angleInRadian) % (2 * math.pi),
-                  0,
-                );
-              } else {
-                animateBackTo(
-                  (_controller.value - angleInRadian) % (2 * math.pi),
-                  0,
-                );
-              }
+              final double angleInRadian = widget.clockwise
+                  ? -_getAngleInRadFromXMovement(xDrag)
+                  : _getAngleInRadFromXMovement(xDrag);
+              animateTo(
+                (_controller.value - angleInRadian) % (2 * math.pi),
+                0,
+              );
             }
           : null,
       onHorizontalDragEnd: widget.isDragInteractive
