@@ -47,8 +47,14 @@ class CarouselWidget3D extends StatefulWidget {
   final bool onlyRenderForeground;
 
   /// Whether the carousel rotates in the clockwise direction when observed from the top.
+  ///
   /// Defaults to false
   final bool clockwise;
+
+  /// Whether it is a horizontal carousel or a vertical carousel.
+  ///
+  /// Defaults to [Axis.horizontal]
+  final Axis spinAxis;
 
   /// The amount of blur effect applied to background children.
   ///
@@ -87,6 +93,11 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to 1.0
   final double dragSensitivity;
 
+  /// Determines how the edges of the carousel area will be clipped.
+  ///
+  /// Defaults to [Clip.hardEdge].
+  final Clip clipBehavior;
+
   /// Called whenever the internal AnimationController's value is updated with the new value.
   /// The internal AnimationController animates from 0 to 2 * pi.
   final Function(double)? onValueChanged;
@@ -118,6 +129,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.isDragInteractive = true,
     this.onlyRenderForeground = false,
     this.clockwise = false,
+    this.spinAxis = Axis.horizontal,
     this.backgroundBlur = 3.0,
     this.spinWhileRotating = true,
     this.shouldRotate = true,
@@ -125,6 +137,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.snapTimeInMillis = 100,
     this.perspectiveStrength = 0.001,
     this.dragSensitivity = 1.0,
+    this.clipBehavior = Clip.hardEdge,
     this.onValueChanged,
     this.background,
     this.core,
@@ -255,7 +268,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     return (dx / radius) * widget.dragSensitivity;
   }
 
-  double initialXPosition = 0;
+  double initialPosition = 0;
 
   double getOffsetAngle(int index) =>
       (_controller.value + (index * _stepAngle)) % (2 * math.pi);
@@ -271,43 +284,64 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   double getYRotation(int index) =>
       widget.spinWhileRotating ? -getOffsetAngle(index) : 0;
 
+  void onDragStart(details) {
+    final bool isHorizontal = widget.spinAxis == Axis.horizontal;
+
+    initialPosition =
+        isHorizontal ? details.globalPosition.dx : details.globalPosition.dy;
+  }
+
+  void onDragUpdate(details) {
+    final bool isHorizontal = widget.spinAxis == Axis.horizontal;
+
+    final double dragDistance = initialPosition -
+        (isHorizontal ? details.globalPosition.dx : details.globalPosition.dy);
+    initialPosition =
+        isHorizontal ? details.globalPosition.dx : details.globalPosition.dy;
+    final double angleInRadian = widget.clockwise
+        ? -_getAngleInRadFromXMovement(dragDistance)
+        : _getAngleInRadFromXMovement(dragDistance);
+    animateTo(
+      (_controller.value - angleInRadian) % (2 * math.pi),
+      0,
+    );
+  }
+
+  void onDragEnd(details) {
+    switch (widget.dragEndBehavior) {
+      case DragEndBehavior.doNothing:
+        break;
+      case DragEndBehavior.snapToNearest:
+        animateToClosestStep();
+        break;
+      case DragEndBehavior.continueRotating:
+        if (widget.shouldRotate) {
+          _rotateInfinitely();
+        } else {
+          animateToClosestStep();
+        }
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final bool isHorizontal = widget.spinAxis == Axis.horizontal;
+
     return GestureDetector(
       onTap: _onBackgroundTap,
-      onHorizontalDragStart: widget.isDragInteractive
-          ? (details) {
-              initialXPosition = details.globalPosition.dx;
-            }
-          : null,
-      onHorizontalDragUpdate: widget.isDragInteractive
-          ? (details) {
-              final double xDrag = initialXPosition - details.globalPosition.dx;
-              initialXPosition = details.globalPosition.dx;
-              final double angleInRadian = widget.clockwise
-                  ? -_getAngleInRadFromXMovement(xDrag)
-                  : _getAngleInRadFromXMovement(xDrag);
-              animateTo(
-                (_controller.value - angleInRadian) % (2 * math.pi),
-                0,
-              );
-            }
-          : null,
-      onHorizontalDragEnd: widget.isDragInteractive
-          ? switch (widget.dragEndBehavior) {
-              DragEndBehavior.doNothing => null,
-              DragEndBehavior.snapToNearest => (details) {
-                  animateToClosestStep();
-                },
-              DragEndBehavior.continueRotating => (details) {
-                  if (widget.shouldRotate) {
-                    _rotateInfinitely();
-                  } else {
-                    animateToClosestStep();
-                  }
-                },
-            }
-          : null,
+      onHorizontalDragStart:
+          widget.isDragInteractive && isHorizontal ? onDragStart : null,
+      onHorizontalDragUpdate:
+          widget.isDragInteractive && isHorizontal ? onDragUpdate : null,
+      onHorizontalDragEnd:
+          widget.isDragInteractive && isHorizontal ? onDragEnd : null,
+      onVerticalDragStart:
+          widget.isDragInteractive && !isHorizontal ? onDragStart : null,
+      onVerticalDragUpdate:
+          widget.isDragInteractive && !isHorizontal ? onDragUpdate : null,
+      onVerticalDragEnd:
+          widget.isDragInteractive && !isHorizontal ? onDragEnd : null,
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
@@ -322,33 +356,87 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
           int getIndexOf(int index) => indexToDistFrom180[index].$1;
 
-          return SizedBox(
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                // To enable dragging on the empty background
-                const Positioned.fill(
-                  child: ColoredBox(color: Colors.transparent),
-                ),
+          return ClipRect(
+            clipBehavior: widget.clipBehavior,
+            child: SizedBox(
+              width: double.infinity,
+              child: Stack(
+                alignment: Alignment.center,
+                clipBehavior: Clip.none,
+                children: [
+                  // To enable dragging on the empty background
+                  const Positioned.fill(
+                    child: ColoredBox(color: Colors.transparent),
+                  ),
 
-                // Background widget
-                if (widget.background != null)
-                  Positioned.fill(child: widget.background!),
+                  // Background widget
+                  if (widget.background != null)
+                    Positioned.fill(child: widget.background!),
 
-                // Back half of the carousel
-                if (!widget.onlyRenderForeground)
+                  // Back half of the carousel
+                  if (!widget.onlyRenderForeground)
+                    for (int i = 0; i < widget.children.length; i++)
+                      if (indexToDistFrom180[i].$2 < 90)
+                        _SubWidget(
+                          isHorizontal: isHorizontal,
+                          scale: widget.childScale,
+                          radius: widget.radius,
+                          perspectiveStrength: widget.perspectiveStrength,
+                          xTranslation: getXTranslation(getIndexOf(i)),
+                          zTranslation:
+                              widget.radius - getZTranslation(getIndexOf(i)),
+                          yRotation: getYRotation(getIndexOf(i)),
+                          child: widget.children[getIndexOf(i)].child,
+                          onTap: () {
+                            switch (widget.childTapBehavior) {
+                              case ChildTapBehavior.doNothing:
+                                break;
+                              case ChildTapBehavior.transparent:
+                                _onBackgroundTap();
+                                break;
+                              case ChildTapBehavior.stopAndSnapToChild:
+                                animateToStep(getIndexOf(i));
+                                break;
+                            }
+                            if (widget.children[getIndexOf(i)].onTap != null) {
+                              widget.children[getIndexOf(i)].onTap!();
+                            }
+                          },
+                        ),
+
+                  // Then, render the blur
+                  IgnorePointer(
+                    ignoring: true,
+                    child: BackdropFilter(
+                      blendMode: BlendMode.srcATop,
+                      filter: ImageFilter.blur(
+                        sigmaX: widget.backgroundBlur,
+                        sigmaY: widget.backgroundBlur,
+                      ),
+                      child: const ColoredBox(color: Colors.transparent),
+                    ),
+                  ),
+
+                  // Core widget
+                  if (widget.core != null)
+                    AbsorbPointer(
+                      absorbing: true,
+                      child: widget.core!,
+                    ),
+
+                  // Front half of the carousel
                   for (int i = 0; i < widget.children.length; i++)
-                    if (indexToDistFrom180[i].$2 < 90)
+                    if (indexToDistFrom180[i].$2 >= 90)
                       _SubWidget(
+                        isHorizontal: isHorizontal,
                         scale: widget.childScale,
                         radius: widget.radius,
                         perspectiveStrength: widget.perspectiveStrength,
-                        xTranslation: getXTranslation(getIndexOf(i)),
-                        zTranslation:
-                            widget.radius - getZTranslation(getIndexOf(i)),
-                        yRotation: getYRotation(getIndexOf(i)),
-                        child: widget.children[getIndexOf(i)].child,
+                        xTranslation: getXTranslation(indexToDistFrom180[i].$1),
+                        zTranslation: widget.radius -
+                            getZTranslation(indexToDistFrom180[i].$1),
+                        yRotation: getYRotation(indexToDistFrom180[i].$1),
+                        child: widget.children[indexToDistFrom180[i].$1].child,
                         onTap: () {
                           switch (widget.childTapBehavior) {
                             case ChildTapBehavior.doNothing:
@@ -365,56 +453,8 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                           }
                         },
                       ),
-
-                // Then, render the blur
-                IgnorePointer(
-                  ignoring: true,
-                  child: BackdropFilter(
-                    blendMode: BlendMode.srcATop,
-                    filter: ImageFilter.blur(
-                      sigmaX: widget.backgroundBlur,
-                      sigmaY: widget.backgroundBlur,
-                    ),
-                    child: const ColoredBox(color: Colors.transparent),
-                  ),
-                ),
-
-                // Core widget
-                if (widget.core != null)
-                  AbsorbPointer(
-                    absorbing: true,
-                    child: widget.core!,
-                  ),
-
-                // Front half of the carousel
-                for (int i = 0; i < widget.children.length; i++)
-                  if (indexToDistFrom180[i].$2 >= 90)
-                    _SubWidget(
-                      scale: widget.childScale,
-                      radius: widget.radius,
-                      perspectiveStrength: widget.perspectiveStrength,
-                      xTranslation: getXTranslation(indexToDistFrom180[i].$1),
-                      zTranslation: widget.radius -
-                          getZTranslation(indexToDistFrom180[i].$1),
-                      yRotation: getYRotation(indexToDistFrom180[i].$1),
-                      child: widget.children[indexToDistFrom180[i].$1].child,
-                      onTap: () {
-                        switch (widget.childTapBehavior) {
-                          case ChildTapBehavior.doNothing:
-                            break;
-                          case ChildTapBehavior.transparent:
-                            _onBackgroundTap();
-                            break;
-                          case ChildTapBehavior.stopAndSnapToChild:
-                            animateToStep(getIndexOf(i));
-                            break;
-                        }
-                        if (widget.children[getIndexOf(i)].onTap != null) {
-                          widget.children[getIndexOf(i)].onTap!();
-                        }
-                      },
-                    ),
-              ],
+                ],
+              ),
             ),
           );
         },

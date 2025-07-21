@@ -1,6 +1,7 @@
 part of 'carousel_widget_3d.dart';
 
 class _SubWidget extends StatelessWidget {
+  final bool isHorizontal;
   final double scale;
   final double radius;
   final double xTranslation;
@@ -11,6 +12,7 @@ class _SubWidget extends StatelessWidget {
   final VoidCallback onTap;
 
   const _SubWidget({
+    required this.isHorizontal,
     required this.scale,
     required this.radius,
     required this.xTranslation,
@@ -27,8 +29,13 @@ class _SubWidget extends StatelessWidget {
       alignment: Alignment.center,
       transform: Matrix4.identity()
         ..setEntry(3, 2, perspectiveStrength)
-        ..translate(xTranslation, 0.0, zTranslation)
-        ..rotateY(yRotation),
+        ..translate(
+          isHorizontal ? xTranslation : 0.0,
+          isHorizontal ? 0.0 : xTranslation,
+          zTranslation,
+        )
+        ..rotateY(isHorizontal ? yRotation : 0.0)
+        ..rotateX(isHorizontal ? 0.0 : yRotation),
       child: Transform.scale(
         scale: scale,
         child: GestureDetector(

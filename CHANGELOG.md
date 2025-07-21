@@ -1,4 +1,11 @@
 
+## Version 2.1.0 - 2025-07-21
+
+### Changes
+- Implemented vertical carousel and added `spinAxis` property.
+- Added `clipBehavior` property.
+- Added Example 3.
+
 ## Version 2.0.1 - 2025-06-09
 
 ### Changes

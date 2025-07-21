@@ -211,15 +211,74 @@ List<Color> colors = [
 <img src="assets/gifs/recording_2.gif" width="350" alt="Screen recording of Example 2"> 
 
 
+### Example 3
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:flutter_3d_carousel/flutter_3d_carousel.dart';
+
+class Example3 extends StatelessWidget {
+  const Example3({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Column(
+        children: [
+          Expanded(child: Container(color: Colors.blueAccent)),
+          Expanded(
+            child: CarouselWidget3D(
+              radius: MediaQuery.sizeOf(context).width * 0.6,
+              onlyRenderForeground: true,
+              spinWhileRotating: false,
+              shouldRotate: true,
+              spinAxis: Axis.vertical,
+              timeForFullRevolution: 20000,
+              perspectiveStrength: 0.002,
+              dragSensitivity: 1.5,
+              children: List.generate(colors.length, (index) {
+                return CarouselChild(
+                  child: Container(
+                    width: MediaQuery.sizeOf(context).width * 3,
+                    height: MediaQuery.sizeOf(context).width * 2,
+                    decoration: BoxDecoration(
+                      color: colors[index],
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+          Expanded(child: Container(color: Colors.indigo)),
+        ],
+      ),
+    );
+  }
+}
+
+List<Color> colors = [
+  Colors.lightBlue,
+  Colors.greenAccent,
+  Colors.teal,
+  Colors.orangeAccent,
+  Colors.purple,
+  Colors.red,
+  Colors.brown,
+  Colors.pink,
+];
+
+```
+
+### Example 3 Screen Recording
+
+<img src="assets/gifs/recording_3.gif" width="350" alt="Screen recording of Example 3"> 
+
 
 ## Ideas for features to add:
 
 Ideas and feature requests are welcome. Here are some ideas for future updates:
 
-- Add Axis option to make it a vertical carousel
-- Expose a function to stop and start the animation manually
-- Add multiple ways for the widgets to spin while rotating. For example, an option would be that when the carousel revolves once, each widget will spin twice. Or the spin direction will change when they pass the center of focus.
-- 2d carousel where the items move on a straight line (slideshow)
 - Add option to add only some of the children to the carousel. For example, 100 children, show 12.
 
 
