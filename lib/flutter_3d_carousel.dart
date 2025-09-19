@@ -6,5 +6,6 @@ export 'src/models/models.dart'
         CarouselChild,
         BackgroundTapBehavior,
         ChildTapBehavior,
-        DragEndBehavior;
+        DragEndBehavior,
+        TiltController;
 export 'src/utils/util_functions.dart' show UtilFunctions;

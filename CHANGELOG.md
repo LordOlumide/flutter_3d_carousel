@@ -1,4 +1,14 @@
 
+
+## Version 3.0.0 -
+
+### Changes
+- Added `tiltAndTiltAxis` property.
+- Renamed `spinAxis` property to `dragDirection`. It no longer affects the axis orientation of the carousel. The tilt effect can be achieved with `tiltAndTiltAxis` property.
+- Renamed `spinWhileRotating` to `childrenAreAlwaysFacingForward` and set its default value to `false`.
+- 
+
+
 ## Version 2.1.0 - 2025-07-21
 
 ### Changes
