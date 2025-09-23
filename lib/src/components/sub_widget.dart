@@ -38,8 +38,9 @@ class _SubWidget extends StatelessWidget {
           yTranslation,
           zTranslation,
         )
-        ..rotateY(yRotation)
+        // 0 * math.pi / 180
         ..rotateX(xRotation)
+        ..rotateY(yRotation)
         ..rotateZ(zRotation),
       child: Transform.scale(
         scale: scale,

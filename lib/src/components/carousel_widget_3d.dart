@@ -46,7 +46,12 @@ class CarouselWidget3D extends StatefulWidget {
   /// Whether only widgets in the front half of the carousel should be rendered
   ///
   /// Defaults to false
-  final bool onlyRenderForeground;
+  final bool hideForeground;
+
+  /// Whether only widgets in the back half of the carousel should be rendered
+  ///
+  /// Defaults to false
+  final bool hideBackground;
 
   /// Whether the carousel rotates in the clockwise direction when observed from the top.
   ///
@@ -102,6 +107,7 @@ class CarouselWidget3D extends StatefulWidget {
 
   /// TODO:
   final TiltController tiltController;
+  final double initialTheta;
 
   /// Determines how the edges of the carousel area will be clipped.
   ///
@@ -141,7 +147,8 @@ class CarouselWidget3D extends StatefulWidget {
     this.backgroundTapBehavior = BackgroundTapBehavior.startAndSnapToNearest,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
     this.isDragInteractive = true,
-    this.onlyRenderForeground = false,
+    this.hideForeground = false,
+    this.hideBackground = false,
     this.clockwise = false,
     this.dragDirection = Axis.horizontal,
     this.backgroundBlur = 3.0,
@@ -153,6 +160,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.perspectiveStrength = 0.001,
     this.dragSensitivity = 1.0,
     this.tiltController = const TiltController(initialTiltAngle: 0),
+    this.initialTheta = 0.0,
     this.clipBehavior = Clip.hardEdge,
     this.onThetaValueChanged,
     this.onAlphaValueChanged,
@@ -184,7 +192,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
     thetaController = AnimationController(
       vsync: this,
-      value: 0.0,
+      value: widget.initialTheta,
       lowerBound: 0.0,
       upperBound: 2 * math.pi,
       duration: Duration(milliseconds: widget.timeForFullRevolution),
@@ -342,16 +350,50 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       math.cos(getThetaOffset(index));
 
   double getZTranslation(int index) =>
-      widget.radius -
-      (widget.radius *
-          math.cos(getThetaOffset(index)) *
-          math.cos(alphaController.value));
+      widget.radius - (widget.radius * getZFraction(index));
 
-  double getYRotation(int index) =>
-      widget.childrenAreAlwaysFacingForward ? 0 : -getThetaOffset(index);
+  double getZFraction(int index) =>
+      math.cos(getThetaOffset(index)) * math.cos(alphaController.value);
 
-  double getXRotation(int index) =>
-      widget.childrenAreAlwaysFacingForward ? 0 : 0;
+  double getYRotation(int index) {
+    if (widget.childrenAreAlwaysFacingForward) {
+      return 0;
+    } else {
+      double absYRotation = getAbsYRotation(index);
+      if (getZFraction(index) >= 0) {
+        return absYRotation;
+      } else {
+        return math.pi - absYRotation;
+      }
+    }
+  }
+
+  double getXRotation(int index) {
+    if (widget.childrenAreAlwaysFacingForward) {
+      return 0;
+    } else {
+      double absXRotation = getAbsXRotation(index);
+      if (getZFraction(index) >= 0) {
+        return absXRotation;
+      } else {
+        return math.pi - absXRotation;
+      }
+    }
+  }
+
+  double getAbsYRotation(int index) => -math.asin(double.parse(
+      (getXTranslation(index) / getMaxXWidthAtIndex(index))
+          .toStringAsFixed(4)));
+
+  double getAbsXRotation(int index) => math.asin(double.parse(
+      (getYTranslation(index) / getMaxYHeightAtIndex(index))
+          .toStringAsFixed(4)));
+
+  double getMaxYHeightAtIndex(int index) =>
+      math.sqrt(math.pow(widget.radius, 2) - getXTranslation(index));
+
+  double getMaxXWidthAtIndex(int index) =>
+      math.sqrt(math.pow(widget.radius, 2) - getYTranslation(index));
 
   double getZRotation(int index) =>
       widget.childrenAreAlwaysFacingForward ? 0 : 0;
@@ -419,18 +461,15 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       onVerticalDragEnd:
           widget.isDragInteractive && !isDragHorizontal ? onDragEnd : null,
       child: AnimatedBuilder(
-        animation: thetaController,
+        animation: Listenable.merge([thetaController, alphaController]),
         builder: (context, child) {
-          List<(int, double)> indexToDistFrom180 = [];
+          List<(int, double)> indexToZDistance = [];
           for (int i = 0; i < widget.children.length; i++) {
-            final double offsetAngle = UtilFunctions.inDegrees(
-              getThetaOffset(i),
-            );
-            indexToDistFrom180.add((i, (180 - offsetAngle).abs()));
+            indexToZDistance.add((i, getZFraction(i)));
           }
-          indexToDistFrom180.sort((a, b) => a.$2.compareTo(b.$2));
+          indexToZDistance.sort((a, b) => a.$2.compareTo(b.$2));
 
-          int getIndexOf(int index) => indexToDistFrom180[index].$1;
+          int getIndexOf(int index) => indexToZDistance[index].$1;
 
           return ClipRect(
             clipBehavior: widget.clipBehavior,
@@ -450,9 +489,9 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                     Positioned.fill(child: widget.background!),
 
                   // Back half of the carousel
-                  if (!widget.onlyRenderForeground)
+                  if (!widget.hideBackground)
                     for (int i = 0; i < widget.children.length; i++)
-                      if (indexToDistFrom180[i].$2 < 90)
+                      if (indexToZDistance[i].$2 < 0)
                         _SubWidget(
                           scale: widget.childScale,
                           radius: widget.radius,
@@ -501,6 +540,38 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       child: widget.core!,
                     ),
 
+                  // Front half of the carousel
+                  if (!widget.hideForeground)
+                    for (int i = 0; i < widget.children.length; i++)
+                      if (indexToZDistance[i].$2 >= 0)
+                        _SubWidget(
+                          scale: widget.childScale,
+                          radius: widget.radius,
+                          perspectiveStrength: widget.perspectiveStrength,
+                          xTranslation: getXTranslation(getIndexOf(i)),
+                          yTranslation: getYTranslation(getIndexOf(i)),
+                          zTranslation: getZTranslation(getIndexOf(i)),
+                          yRotation: getYRotation(getIndexOf(i)),
+                          xRotation: getXRotation(getIndexOf(i)),
+                          zRotation: getZRotation(getIndexOf(i)),
+                          child: widget.children[getIndexOf(i)].child,
+                          onTap: () {
+                            switch (widget.childTapBehavior) {
+                              case ChildTapBehavior.doNothing:
+                                break;
+                              case ChildTapBehavior.transparent:
+                                _onBackgroundTap();
+                                break;
+                              case ChildTapBehavior.stopAndSnapToChild:
+                                animateToStep(getIndexOf(i));
+                                break;
+                            }
+                            if (widget.children[getIndexOf(i)].onTap != null) {
+                              widget.children[getIndexOf(i)].onTap!();
+                            }
+                          },
+                        ),
+
                   //TODO:
                   Column(
                     mainAxisSize: MainAxisSize.min,
@@ -508,45 +579,21 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        (thetaController.value * 180 / math.pi)
-                            .toStringAsFixed(0),
+                        (getXRotation(0)).toStringAsFixed(2),
+                        style: TextStyle(fontSize: 30),
                       ),
-                      Text(
-                        (getZTranslation(getIndexOf(0))).toStringAsFixed(0),
-                      ),
+                      const SizedBox(height: 200),
+                      // Text(
+                      //   (math.asin(getXTranslation(0) / getMaxXWidthAtIndex(0)) * 180 / math.pi)
+                      //       .toStringAsFixed(2),
+                      //   style: TextStyle(fontSize: 30),
+                      // ),
+                      // Text(
+                      //   (getZFraction(0)).toStringAsFixed(2),
+                      //   style: TextStyle(fontSize: 30),
+                      // ),
                     ],
                   ),
-
-                  // Front half of the carousel
-                  for (int i = 0; i < widget.children.length; i++)
-                    if (indexToDistFrom180[i].$2 >= 90)
-                      _SubWidget(
-                        scale: widget.childScale,
-                        radius: widget.radius,
-                        perspectiveStrength: widget.perspectiveStrength,
-                        xTranslation: getXTranslation(getIndexOf(i)),
-                        yTranslation: getYTranslation(getIndexOf(i)),
-                        zTranslation: getZTranslation(getIndexOf(i)),
-                        yRotation: getYRotation(getIndexOf(i)),
-                        xRotation: getXRotation(getIndexOf(i)),
-                        zRotation: getZRotation(getIndexOf(i)),
-                        child: widget.children[getIndexOf(i)].child,
-                        onTap: () {
-                          switch (widget.childTapBehavior) {
-                            case ChildTapBehavior.doNothing:
-                              break;
-                            case ChildTapBehavior.transparent:
-                              _onBackgroundTap();
-                              break;
-                            case ChildTapBehavior.stopAndSnapToChild:
-                              animateToStep(getIndexOf(i));
-                              break;
-                          }
-                          if (widget.children[getIndexOf(i)].onTap != null) {
-                            widget.children[getIndexOf(i)].onTap!();
-                          }
-                        },
-                      ),
                 ],
               ),
             ),

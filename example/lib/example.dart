@@ -14,16 +14,16 @@ class Example1 extends StatelessWidget {
         backgroundTapBehavior: BackgroundTapBehavior.startAndSnapToNearest,
         childTapBehavior: ChildTapBehavior.transparent,
         isDragInteractive: true,
-        onlyRenderForeground: false,
+        hideForeground: false,
         clockwise: false,
         backgroundBlur: 3,
         childrenAreAlwaysFacingForward: true,
-        shouldRotate: true,
+        thetaShouldRotate: true,
         timeForFullRevolution: 20000,
         snapTimeInMillis: 100,
         perspectiveStrength: 0.001,
         dragSensitivity: 1.0,
-        onValueChanged: (newValue) {
+        onThetaValueChanged: (newValue) {
           // print(newValue);
         },
         background: null,
@@ -68,16 +68,16 @@ class _Example2State extends State<Example2> {
                   BackgroundTapBehavior.startAndSnapToNearest,
               childTapBehavior: ChildTapBehavior.stopAndSnapToChild,
               isDragInteractive: true,
-              onlyRenderForeground: false,
+              hideForeground: false,
               clockwise: false,
               backgroundBlur: 3,
               childrenAreAlwaysFacingForward: false,
-              shouldRotate: true,
+              thetaShouldRotate: true,
               timeForFullRevolution: 12000,
               snapTimeInMillis: 100,
               perspectiveStrength: 0.001,
               dragSensitivity: 1.5,
-              onValueChanged: (newValue) {
+              onThetaValueChanged: (newValue) {
                 // print(newValue);
               },
               background: Image.asset(
@@ -140,9 +140,9 @@ class Example3 extends StatelessWidget {
           Expanded(
             child: CarouselWidget3D(
               radius: MediaQuery.sizeOf(context).width * 0.6,
-              onlyRenderForeground: true,
+              hideForeground: true,
               childrenAreAlwaysFacingForward: false,
-              shouldRotate: true,
+              thetaShouldRotate: true,
               dragDirection: Axis.vertical,
               timeForFullRevolution: 20000,
               perspectiveStrength: 0.002,
