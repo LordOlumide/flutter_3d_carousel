@@ -322,19 +322,6 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     return (dx / radius) * widget.dragSensitivity;
   }
 
-  double normalizeAlphaForYCalculations(double valueInRadians) {
-    valueInRadians = valueInRadians % (math.pi * 2);
-    if (valueInRadians >= 0 && valueInRadians <= math.pi / 2) {
-      return valueInRadians;
-    } else if (valueInRadians <= math.pi) {
-      return math.pi - valueInRadians;
-    } else if (valueInRadians <= (3 * math.pi / 2)) {
-      return math.pi - valueInRadians;
-    } else {
-      return valueInRadians - (2 * math.pi);
-    }
-  }
-
   double initialPosition = 0;
 
   double getThetaOffset(int index) =>
@@ -356,10 +343,12 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       math.cos(getThetaOffset(index)) * math.cos(alphaController.value);
 
   double getYRotation(int index) {
+    return 0;
     if (widget.childrenAreAlwaysFacingForward) {
       return 0;
     } else {
       double absYRotation = getAbsYRotation(index);
+      return absYRotation;
       if (getZFraction(index) >= 0) {
         return absYRotation;
       } else {
@@ -369,6 +358,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   }
 
   double getXRotation(int index) {
+    return 0;
     if (widget.childrenAreAlwaysFacingForward) {
       return 0;
     } else {
@@ -579,7 +569,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
-                        (getXRotation(0)).toStringAsFixed(2),
+                        (getAbsYRotation(0) * 180 / math.pi).toStringAsFixed(2),
                         style: TextStyle(fontSize: 30),
                       ),
                       const SizedBox(height: 200),
