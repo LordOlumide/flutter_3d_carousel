@@ -181,7 +181,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   late final AnimationController alphaController;
 
   // The theta angle between successive elements in the carousel
-  late final double _stepAngle;
+  double _stepAngle = 2 * math.pi;
 
   static const int animationTimeMillis = 300;
 
@@ -212,6 +212,43 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     alphaController.addListener(_alphaControllerListener);
     if (widget.alphaShouldRotate) {
       alphaController.repeat();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CarouselWidget3D oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Everything set up in `initState()` needs to be monitored here:
+
+    if (widget.children.length != oldWidget.children.length) {
+      _stepAngle = (2 * math.pi) / widget.children.length;
+    }
+
+    if (widget.timeForFullRevolution != oldWidget.timeForFullRevolution) {
+      thetaController.duration =
+          Duration(milliseconds: widget.timeForFullRevolution);
+    }
+
+    if (widget.thetaShouldRotate != oldWidget.thetaShouldRotate) {
+      widget.thetaShouldRotate
+          ? thetaController.repeat()
+          : animateToClosestStep();
+    }
+
+    // Deliberately skipping the `initialTiltAngle, because that
+    // _explicitly_ only applies during initialization
+
+    if (widget.tiltController.tiltAnimationTime !=
+        oldWidget.tiltController.tiltAnimationTime) {
+      alphaController.duration =
+          Duration(milliseconds: widget.tiltController.tiltAnimationTime);
+    }
+
+    if (widget.alphaShouldRotate != oldWidget.alphaShouldRotate) {
+      widget.alphaShouldRotate
+          ? alphaController.repeat()
+          : alphaController.stop();
     }
   }
 
