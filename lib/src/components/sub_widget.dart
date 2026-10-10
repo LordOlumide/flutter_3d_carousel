@@ -33,21 +33,20 @@ class _SubWidget extends StatelessWidget {
       alignment: Alignment.center,
       transform: Matrix4.identity()
         ..setEntry(3, 2, perspectiveStrength)
-        ..translate(
+        ..translateByDouble(
           xTranslation,
           yTranslation,
           zTranslation,
+          1.0,
         )
         // 0 * math.pi / 180
         ..rotateX(xRotation)
         ..rotateY(yRotation)
-        ..rotateZ(zRotation),
-      child: Transform.scale(
-        scale: scale,
-        child: GestureDetector(
-          onTap: onTap,
-          child: child,
-        ),
+        ..rotateZ(zRotation)
+        ..scaleByDouble(scale, scale, scale, 1.0),
+      child: GestureDetector(
+        onTap: onTap,
+        child: child,
       ),
     );
   }

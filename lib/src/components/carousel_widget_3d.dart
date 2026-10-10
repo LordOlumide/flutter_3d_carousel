@@ -142,7 +142,7 @@ class CarouselWidget3D extends StatefulWidget {
   const CarouselWidget3D({
     super.key,
     required this.radius,
-    this.childScale = 0.5,
+    this.childScale = 1.0,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
     this.backgroundTapBehavior = BackgroundTapBehavior.startAndSnapToNearest,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
