@@ -34,6 +34,11 @@ abstract class UtilFunctions {
     return degree * math.pi / 180;
   }
 
+  /// TODO: Document
+  static double normalizeDegreeInRadians(double degree) {
+    return degree % (2 * math.pi);
+  }
+
   /// Determines an appropriate contrasting text color for a given background color.
   ///
   /// Uses luminance calculation to determine whether black or white
