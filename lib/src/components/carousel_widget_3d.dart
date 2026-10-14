@@ -1,11 +1,11 @@
 import 'dart:math' as math;
 import 'dart:ui';
+import 'package:vector_math/vector_math_64.dart' as vector_math hide Colors;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_3d_carousel/src/models/input_function.dart';
 import 'package:flutter_3d_carousel/src/models/models.dart';
-import 'package:flutter_3d_carousel/src/utils/util_functions.dart';
+import 'package:flutter_3d_carousel/src/utils/utils.dart';
 
 part 'sub_widget.dart';
 
@@ -386,28 +386,27 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
   double getXTranslation(int index) =>
       widget.radius *
-      ((-math.sin(yawAngle) *
-              math.cos(pitchAngle) *
-              math.cos(getRollOffset(index))) -
-          (math.cos(yawAngle) * math.sin(getRollOffset(index))));
+      Transformation.get00(
+        rollAngle: getRollOffset(index),
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      );
 
   double getYTranslation(int index) =>
       widget.radius *
-      -(math.sin(pitchAngle) * math.cos(getRollOffset(index)));
+      Transformation.get01(
+        rollAngle: getRollOffset(index),
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      );
 
   double getZTranslation(int index) =>
-      -1 *
       widget.radius *
-      ((math.cos(yawAngle) *
-              math.cos(pitchAngle) *
-              math.cos(getRollOffset(index))) -
-          (math.sin(yawAngle) * math.sin(getRollOffset(index))));
-
-  double getXRotation(int index) => 0;
-
-  double getYRotation(int index) => 0;
-
-  double getZRotation(int index) => 0;
+      Transformation.get02(
+        rollAngle: getRollOffset(index),
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -462,9 +461,11 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       xTranslation: getXTranslation(getIndexOf(i)),
                       yTranslation: getYTranslation(getIndexOf(i)),
                       zTranslation: getZTranslation(getIndexOf(i)),
-                      yRotation: getYRotation(getIndexOf(i)),
-                      xRotation: getXRotation(getIndexOf(i)),
-                      zRotation: getZRotation(getIndexOf(i)),
+                      rollAngle: getRollOffset(i),
+                      pitchAngle: pitchAngle,
+                      yawAngle: yawAngle,
+                      childrenAreAlwaysFacingForward:
+                          widget.childrenAreAlwaysFacingForward,
                       child: widget.children[getIndexOf(i)].child,
                       onTap: () {
                         // switch (widget.childTapBehavior) {
@@ -514,9 +515,11 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       xTranslation: getXTranslation(getIndexOf(i)),
                       yTranslation: getYTranslation(getIndexOf(i)),
                       zTranslation: getZTranslation(getIndexOf(i)),
-                      yRotation: getYRotation(getIndexOf(i)),
-                      xRotation: getXRotation(getIndexOf(i)),
-                      zRotation: getZRotation(getIndexOf(i)),
+                      rollAngle: getRollOffset(i),
+                      pitchAngle: pitchAngle,
+                      yawAngle: yawAngle,
+                      childrenAreAlwaysFacingForward:
+                          widget.childrenAreAlwaysFacingForward,
                       child: widget.children[getIndexOf(i)].child,
                       onTap: () {
                         // switch (widget.childTapBehavior) {
@@ -542,8 +545,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    (getZTranslation(0) / widget.radius)
-                        .toStringAsFixed(2),
+                    (getZTranslation(0) / widget.radius).toStringAsFixed(2),
                     style: TextStyle(fontSize: 30),
                   ),
                   const SizedBox(height: 300),

@@ -6,9 +6,10 @@ class _SubWidget extends StatelessWidget {
   final double xTranslation;
   final double yTranslation;
   final double zTranslation;
-  final double yRotation;
-  final double xRotation;
-  final double zRotation;
+  final double rollAngle;
+  final double pitchAngle;
+  final double yawAngle;
+  final bool childrenAreAlwaysFacingForward;
   final double perspectiveStrength;
   final Widget child;
   final VoidCallback onTap;
@@ -19,9 +20,10 @@ class _SubWidget extends StatelessWidget {
     required this.xTranslation,
     required this.yTranslation,
     required this.zTranslation,
-    required this.yRotation,
-    required this.xRotation,
-    required this.zRotation,
+    required this.rollAngle,
+    required this.pitchAngle,
+    required this.yawAngle,
+    required this.childrenAreAlwaysFacingForward,
     required this.perspectiveStrength,
     required this.child,
     required this.onTap,
@@ -31,19 +33,20 @@ class _SubWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Transform(
       alignment: Alignment.center,
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, perspectiveStrength)
-        ..translateByDouble(
-          xTranslation,
-          yTranslation,
-          zTranslation,
-          1.0,
-        )
-        // 0 * math.pi / 180
-        ..rotateX(xRotation)
-        ..rotateY(yRotation)
-        ..rotateZ(zRotation)
-        ..scaleByDouble(scale, scale, scale, 1.0),
+      transform: Matrix4.compose(
+        vector_math.Vector3(xTranslation, yTranslation, zTranslation),
+        vector_math.Quaternion.euler(yawAngle, pitchAngle, rollAngle),
+        vector_math.Vector3(scale, scale, scale),
+      )..setEntry(3, 2, perspectiveStrength),
+      // transform: Matrix4.identity()
+      //   ..setEntry(3, 2, perspectiveStrength)
+      //   ..translateByDouble(
+      //     xTranslation,
+      //     yTranslation,
+      //     zTranslation,
+      //     1.0,
+      //   )
+      //   ..scaleByDouble(scale, scale, scale, 1.0),
       child: GestureDetector(
         onTap: onTap,
         child: child,
