@@ -176,6 +176,8 @@ class CarouselWidget3D extends StatefulWidget {
 
 // TODO: Handle all Gesture Responses
 
+// TODO: Make the carousel able to display orientation facing the moving axis
+
 class _CarouselWidget3DState extends State<CarouselWidget3D>
     with SingleTickerProviderStateMixin {
   // The theta angle between successive elements in the carousel
@@ -385,24 +387,24 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       (rollAngle + (index * _stepAngle)) % (2 * math.pi);
 
   double getXTranslation(int index) =>
-      widget.radius *
-      Transformation.get00(
+      -widget.radius *
+      Transformation.get20(
         rollAngle: getRollOffset(index),
         pitchAngle: pitchAngle,
         yawAngle: yawAngle,
       );
 
   double getYTranslation(int index) =>
-      widget.radius *
-      Transformation.get01(
+      -widget.radius *
+      Transformation.get21(
         rollAngle: getRollOffset(index),
         pitchAngle: pitchAngle,
         yawAngle: yawAngle,
       );
 
   double getZTranslation(int index) =>
-      widget.radius *
-      Transformation.get02(
+      -widget.radius *
+      Transformation.get22(
         rollAngle: getRollOffset(index),
         pitchAngle: pitchAngle,
         yawAngle: yawAngle,
@@ -461,7 +463,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       xTranslation: getXTranslation(getIndexOf(i)),
                       yTranslation: getYTranslation(getIndexOf(i)),
                       zTranslation: getZTranslation(getIndexOf(i)),
-                      rollAngle: getRollOffset(i),
+                      rollAngle: getRollOffset(getIndexOf(i)),
                       pitchAngle: pitchAngle,
                       yawAngle: yawAngle,
                       childrenAreAlwaysFacingForward:
@@ -515,7 +517,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                       xTranslation: getXTranslation(getIndexOf(i)),
                       yTranslation: getYTranslation(getIndexOf(i)),
                       zTranslation: getZTranslation(getIndexOf(i)),
-                      rollAngle: getRollOffset(i),
+                      rollAngle: getRollOffset(getIndexOf(i)),
                       pitchAngle: pitchAngle,
                       yawAngle: yawAngle,
                       childrenAreAlwaysFacingForward:
@@ -548,6 +550,10 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                     (getZTranslation(0) / widget.radius).toStringAsFixed(2),
                     style: TextStyle(fontSize: 30),
                   ),
+                  // Text(
+                  //   (getRollOffset(0) * 180 / math.pi).toStringAsFixed(2),
+                  //   style: TextStyle(fontSize: 30),
+                  // ),
                   const SizedBox(height: 300),
                   // Text(
                   //   widget.pitch

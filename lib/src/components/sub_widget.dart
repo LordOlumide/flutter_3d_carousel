@@ -29,16 +29,88 @@ class _SubWidget extends StatelessWidget {
     required this.onTap,
   });
 
+  // void testTransformationMatrix(vector_math.Matrix3 rotation) {
+  //   final xAxis = rotation.transform(vector_math.Vector3(1, 0, 0));
+  //   final yAxis = rotation.transform(vector_math.Vector3(0, 1, 0));
+  //   final zAxis = rotation.transform(vector_math.Vector3(0, 0, 1));
+  //
+  //   print('Transformed X axis: $xAxis');
+  //   print('Transformed Y axis: $yAxis');
+  //   print('Transformed Z axis: $zAxis');
+  // }
+
   @override
   Widget build(BuildContext context) {
+    // print('${UtilFunctions.inDegrees(rollAngle).toStringAsFixed(2)}, '
+    //     '${UtilFunctions.inDegrees(pitchAngle).toStringAsFixed(2)}, '
+    //     '${UtilFunctions.inDegrees(yawAngle).toStringAsFixed(2)}');
+
+    final vector_math.Matrix4 matrix4 = Matrix4(
+      Transformation.get00(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      Transformation.get01(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      Transformation.get02(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      0,
+      Transformation.get10(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      Transformation.get11(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      Transformation.get12(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      0,
+      Transformation.get20(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      Transformation.get21(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      Transformation.get22(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      ),
+      perspectiveStrength,
+      xTranslation,
+      yTranslation,
+      zTranslation,
+      1,
+    );
+    print(matrix4.getTranslation());
+
+    // TODO: The object is moving in the z dimension in 3d space but the perspectiveStrength is not
+    // applied to the motion.
+    // The object is also rotating in the Y axis but it is also not showing
+
     return Transform(
       alignment: Alignment.center,
-      transform: Matrix4.compose(
-        vector_math.Vector3(xTranslation, yTranslation, zTranslation),
-        vector_math.Quaternion.euler(yawAngle, pitchAngle, rollAngle),
-        vector_math.Vector3(scale, scale, scale),
-      )..setEntry(3, 2, perspectiveStrength),
+      transform: matrix4,
+
       // transform: Matrix4.identity()
+      //   // perspectiveStrength must be set first
       //   ..setEntry(3, 2, perspectiveStrength)
       //   ..translateByDouble(
       //     xTranslation,
