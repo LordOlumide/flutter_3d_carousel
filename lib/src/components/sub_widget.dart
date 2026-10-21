@@ -9,7 +9,7 @@ class _SubWidget extends StatelessWidget {
   final double rollAngle;
   final double pitchAngle;
   final double yawAngle;
-  final bool childrenAreAlwaysFacingForward;
+  final ChildOrientation childOrientation;
   final double perspectiveStrength;
   final Widget child;
   final VoidCallback onTap;
@@ -23,7 +23,7 @@ class _SubWidget extends StatelessWidget {
     required this.rollAngle,
     required this.pitchAngle,
     required this.yawAngle,
-    required this.childrenAreAlwaysFacingForward,
+    required this.childOrientation,
     required this.perspectiveStrength,
     required this.child,
     required this.onTap,
@@ -45,61 +45,87 @@ class _SubWidget extends StatelessWidget {
     //     '${UtilFunctions.inDegrees(pitchAngle).toStringAsFixed(2)}, '
     //     '${UtilFunctions.inDegrees(yawAngle).toStringAsFixed(2)}');
 
-    final vector_math.Matrix4 matrix4 = Matrix4(
-      Transformation.get00(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      Transformation.get01(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      Transformation.get02(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      0,
-      Transformation.get10(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      Transformation.get11(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      Transformation.get12(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      0,
-      Transformation.get20(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      Transformation.get21(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      Transformation.get22(
-        rollAngle: rollAngle,
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
-      ),
-      perspectiveStrength,
-      xTranslation,
-      yTranslation,
-      zTranslation,
-      1,
-    );
-    print(matrix4.getTranslation());
+    final Transformation? transformation = switch (childOrientation) {
+      ChildOrientation.backingCenter => Transformation1(),
+      ChildOrientation.facingYAxis => Transformation2(),
+      ChildOrientation.facingScreen => null,
+    };
+
+    final vector_math.Matrix4 matrix4 = switch (childOrientation) {
+      (ChildOrientation.backingCenter || ChildOrientation.facingYAxis) =>
+        Matrix4(
+          transformation!.get00(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          transformation.get01(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          transformation.get02(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          0,
+          transformation.get10(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          transformation.get11(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          transformation.get12(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          0,
+          transformation.get20(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          transformation.get21(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          transformation.get22(
+            rollAngle: rollAngle,
+            pitchAngle: pitchAngle,
+            yawAngle: yawAngle,
+          ),
+          perspectiveStrength,
+          xTranslation,
+          yTranslation,
+          zTranslation,
+          1,
+        ),
+      ChildOrientation.facingScreen => Matrix4(
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          1,
+          perspectiveStrength,
+          xTranslation,
+          yTranslation,
+          zTranslation,
+          1,
+        ),
+    };
 
     // TODO: The object is moving in the z dimension in 3d space but the perspectiveStrength is not
     // applied to the motion.
@@ -118,6 +144,14 @@ class _SubWidget extends StatelessWidget {
       //     zTranslation,
       //     1.0,
       //   )
+      //   ..rotateY(math.pi / 10)
+      //   // ..setRotation(
+      //   //   Transformation.getTransformationMatrix(
+      //   //     rollAngle: rollAngle,
+      //   //     pitchAngle: pitchAngle,
+      //   //     yawAngle: yawAngle,
+      //   //   ),
+      //   // )
       //   ..scaleByDouble(scale, scale, scale, 1.0),
       child: GestureDetector(
         onTap: onTap,

@@ -11,6 +11,8 @@ part 'sub_widget.dart';
 
 // TODO: Create Presets: .horizontal, .vertical, .spinning
 
+// TODO: Show guiding axes
+
 /// A 3D carousel widget that displays children in a circular arrangement with
 /// 3D perspective effects and interactive rotation.
 ///
@@ -28,25 +30,25 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to 1.0
   final double childScale;
 
-  // /// Determines how the carousel behaves after a drag interaction ends. See [DragEndBehavior] for available options.
-  // ///
-  // /// Defaults to [DragEndBehavior.snapToNearest]
-  // final DragEndBehavior dragEndBehavior;
+  /// Determines how the carousel behaves after the background is tapped. See [BackgroundTapBehavior] for available options.
+  ///
+  /// Defaults to [BackgroundTapBehavior.none]
+  final BackgroundTapBehavior backgroundTapBehavior;
 
-  // /// Determines how the carousel behaves after the background is tapped. See [BackgroundTapBehavior] for available options.
-  // ///
-  // /// Defaults to [BackgroundTapBehavior.startAndSnapToNearest]
-  // final BackgroundTapBehavior backgroundTapBehavior;
+  /// Determines how the carousel behaves after a child is tapped. See [ChildTapBehavior] for available options.
+  ///
+  /// Defaults to [ChildTapBehavior.stopAndSnapToChild]
+  final ChildTapBehavior childTapBehavior;
 
-  // /// Determines how the carousel behaves after a child is tapped. See [ChildTapBehavior] for available options.
-  // ///
-  // /// Defaults to [ChildTapBehavior.stopAndSnapToChild]
-  // final ChildTapBehavior childTapBehavior;
+  /// Whether the carousel should respond to drag gestures.
+  ///
+  /// Defaults to true
+  final bool isDragInteractive;
 
-  // /// Whether the carousel should respond to drag gestures.
-  // ///
-  // /// Defaults to true
-  // final bool isDragInteractive;
+  /// Determines how the carousel behaves after a drag interaction ends. See [DragEndBehavior] for available options.
+  ///
+  /// Defaults to [DragEndBehavior.snapToNearest]
+  final DragEndBehavior dragEndBehavior;
 
   /// Whether only widgets in the front half of the carousel should be rendered
   ///
@@ -58,27 +60,15 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to false
   final bool hideBackground;
 
-  /// Whether the carousel rotates in the clockwise direction when observed from the top.
-  ///
-  /// Defaults to false
-  final bool clockwise;
-
-  // /// Whether it is a horizontal carousel or a vertical carousel.
-  // ///
-  // /// Defaults to [Axis.horizontal]
-  // final Axis dragDirection;
-
   /// The amount of blur effect applied to background children.
   ///
   /// Defaults to 3.0
   final double backgroundBlur;
 
-  /// TODO: Whether the children of the carousel should spin with the carousel.
-  /// If false, the children of the carousel will change orientation with it and always be facing outwards from the center of the carousel.
-  /// If true, the children will always be facing forward (facing the camera or viewer).
+  /// The direction the children of the carousel will be oriented towards.
   ///
-  /// Defaults to true
-  final bool childrenAreAlwaysFacingForward;
+  /// Defaults to [ChildOrientation.backingCenter].
+  final ChildOrientation childOrientation;
 
   /// This function sets the rotation of the axis around its own longitudinal line.
   ///
@@ -99,6 +89,9 @@ class CarouselWidget3D extends StatefulWidget {
   ///
   /// Defaults to 100
   final int snapTimeInMillis;
+
+  /// The curve os the snap behaviour.
+  final Curve snapCurve;
 
   /// Decides how strong the perspective effect will be. Uses Matrix4.identity()..setEntry(3, 2, [perspectiveStrength]).
   ///
@@ -145,20 +138,19 @@ class CarouselWidget3D extends StatefulWidget {
     super.key,
     required this.radius,
     this.childScale = 1.0,
-    // this.dragEndBehavior = DragEndBehavior.snapToNearest,
-    // this.backgroundTapBehavior = BackgroundTapBehavior.startAndSnapToNearest,
-    // this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
-    // this.isDragInteractive = true,
+    this.backgroundTapBehavior = BackgroundTapBehavior.none,
+    this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
+    this.isDragInteractive = true,
+    this.dragEndBehavior = DragEndBehavior.snapToNearest,
     this.hideForeground = false,
     this.hideBackground = false,
-    this.clockwise = false,
-    // this.dragDirection = Axis.horizontal,
     this.backgroundBlur = 3.0,
-    this.childrenAreAlwaysFacingForward = false,
+    this.childOrientation = ChildOrientation.backingCenter,
     this.roll = const ConstantInputFunction(value: 0),
     this.pitch = const ConstantInputFunction(value: 0),
     this.yaw = const ConstantInputFunction(value: 0),
     this.snapTimeInMillis = 100,
+    this.snapCurve = Curves.linear,
     this.perspectiveStrength = 0.001,
     this.dragSensitivity = 1.0,
     this.clipBehavior = Clip.hardEdge,
@@ -176,114 +168,209 @@ class CarouselWidget3D extends StatefulWidget {
 
 // TODO: Handle all Gesture Responses
 
-// TODO: Make the carousel able to display orientation facing the moving axis
+// TODO: Programmatically freeze or move to the next and previous object in the carousel
 
 class _CarouselWidget3DState extends State<CarouselWidget3D>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // The theta angle between successive elements in the carousel
   late double _stepAngle;
 
   // Instead of using AnimationController, we are using a Ticker object to track time progress
-  late final Ticker _ticker;
-  Duration _elapsedTime = Duration();
+  late Ticker _ticker;
+  Duration _elapsedTime = const Duration();
 
-  double rollAngle = 0;
-  double pitchAngle = 0;
-  double yawAngle = 0;
+  late final AnimationController rollAngleController;
+  late final AnimationController pitchAngleController;
+  late final AnimationController yawAngleController;
 
   @override
   void initState() {
     super.initState();
+    rollAngleController = AnimationController(
+      vsync: this,
+      value: 0,
+      lowerBound: 0,
+      upperBound: math.pi * 2,
+    );
+    pitchAngleController = AnimationController(
+      vsync: this,
+      value: 0,
+      lowerBound: 0,
+      upperBound: math.pi * 2,
+    );
+    yawAngleController = AnimationController(
+      vsync: this,
+      value: 0,
+      lowerBound: 0,
+      upperBound: math.pi * 2,
+    );
+
     _stepAngle = (2 * math.pi) / widget.children.length;
 
     _ticker = createTicker((Duration elapsed) {
-      setState(() {
-        _elapsedTime = elapsed;
-        _getUpdatedAngles(elapsed);
-      });
+      _elapsedTime = elapsed;
+      _getUpdatedAngles(elapsedTime: _elapsedTime);
     });
 
     _ticker.start();
   }
 
-  // @override
-  // void didUpdateWidget(covariant CarouselWidget3D oldWidget) {
-  //   super.didUpdateWidget(oldWidget);
-  //
-  //   // Everything set up in `initState()` needs to be monitored here:
-  //
-  //   if (widget.children.length != oldWidget.children.length) {
-  //     _stepAngle = (2 * math.pi) / widget.children.length;
-  //   }
-  //
-  //   if (widget.timeForFullRevolution != oldWidget.timeForFullRevolution) {
-  //     thetaController.duration =
-  //         Duration(milliseconds: widget.timeForFullRevolution);
-  //   }
-  //
-  //   if (widget.thetaShouldRotate != oldWidget.thetaShouldRotate) {
-  //     widget.thetaShouldRotate
-  //         ? thetaController.repeat()
-  //         : animateToClosestStep();
-  //   }
-  //
-  //   // Deliberately skipping the `initialTiltAngle, because that
-  //   // _explicitly_ only applies during initialization
-  //
-  //   if (widget.tiltController.tiltAnimationTime !=
-  //       oldWidget.tiltController.tiltAnimationTime) {
-  //     alphaController.duration =
-  //         Duration(milliseconds: widget.tiltController.tiltAnimationTime);
-  //   }
-  //
-  //   if (widget.alphaShouldRotate != oldWidget.alphaShouldRotate) {
-  //     widget.alphaShouldRotate
-  //         ? alphaController.repeat()
-  //         : alphaController.stop();
-  //   }
-  // }
+  @override
+  void didUpdateWidget(covariant CarouselWidget3D oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Everything set up in `initState()` needs to be monitored here:
+
+    if (widget.children.length != oldWidget.children.length) {
+      _stepAngle = (2 * math.pi) / widget.children.length;
+    }
+
+    if (widget.roll != oldWidget.roll ||
+        widget.pitch != oldWidget.pitch ||
+        widget.yaw != oldWidget.yaw ||
+        widget.childOrientation != oldWidget.childOrientation ||
+        widget.snapCurve != oldWidget.snapCurve
+    ) {
+      // TODO: What to do if someone sets the motion to stop
+      if (_ticker.isActive) {
+        _restartTicker();
+      }
+    }
+  }
 
   @override
   void dispose() {
+    _ticker.stop(canceled: true);
     _ticker.dispose();
+
+    rollAngleController.dispose();
+    pitchAngleController.dispose();
+    yawAngleController.dispose();
 
     super.dispose();
   }
 
-  void _getUpdatedAngles(Duration elapsedTime) {
-    final double newRollAngle =
-        widget.roll.getCurrentValue(elapsedTime: elapsedTime);
-    final double newPitchAngle =
-        widget.pitch.getCurrentValue(elapsedTime: elapsedTime);
-    final double newYawAngle =
-        widget.yaw.getCurrentValue(elapsedTime: elapsedTime);
+  void _getUpdatedAngles({
+    required Duration elapsedTime,
+    double? newInitialRollValue,
+    double? newInitialPitchValue,
+    double? newInitialYawValue,
+  }) {
+    final double newRollAngle = widget.roll.getCurrentValue(
+      elapsedTime: elapsedTime,
+      newInitialValue: newInitialRollValue,
+    );
+    final double newPitchAngle = widget.pitch.getCurrentValue(
+      elapsedTime: elapsedTime,
+      newInitialValue: newInitialPitchValue,
+    );
+    final double newYawAngle = widget.yaw.getCurrentValue(
+      elapsedTime: elapsedTime,
+      newInitialValue: newInitialYawValue,
+    );
 
-    if (widget.onRollAngleChanged != null && rollAngle != newRollAngle) {
+    if (widget.onRollAngleChanged != null &&
+        rollAngleController.value != newRollAngle) {
       widget.onRollAngleChanged!(newRollAngle);
     }
-    if (widget.onPitchAngleChanged != null && pitchAngle != newPitchAngle) {
+    if (widget.onPitchAngleChanged != null &&
+        pitchAngleController.value != newPitchAngle) {
       widget.onPitchAngleChanged!(newPitchAngle);
     }
-    if (widget.onYawAngleChanged != null && yawAngle != newYawAngle) {
+    if (widget.onYawAngleChanged != null &&
+        yawAngleController.value != newYawAngle) {
       widget.onYawAngleChanged!(newYawAngle);
     }
 
-    rollAngle = newRollAngle;
-    pitchAngle = newPitchAngle;
-    yawAngle = newYawAngle;
+    rollAngleController.value = newRollAngle;
+    pitchAngleController.value = newPitchAngle;
+    yawAngleController.value = newYawAngle;
   }
 
-  // Future<void> animateToStep(int index) async {
-  //   final double stepAngle = (2 * math.pi) - (index * _stepAngle);
-  //   await animateTo(stepAngle, widget.snapTimeInMillis);
-  // }
-  //
-  // Future<void> animateToClosestStep() async {
-  //   final int closestStep = (thetaController.value / _stepAngle).round();
-  //   final double closestStepAngle = closestStep * _stepAngle;
-  //   await animateTo(closestStepAngle, widget.snapTimeInMillis);
-  // }
-  //
+  void _restartTicker() {
+    final double newInitialRollValue = rollAngleController.value;
+    final double newInitialPitchValue = pitchAngleController.value;
+    final double newInitialYawValue = yawAngleController.value;
+
+    _ticker = createTicker((Duration elapsed) {
+      _elapsedTime = elapsed;
+      _getUpdatedAngles(
+        elapsedTime: elapsed,
+        newInitialRollValue: newInitialRollValue,
+        newInitialPitchValue: newInitialPitchValue,
+        newInitialYawValue: newInitialYawValue,
+      );
+    });
+    _ticker.start();
+  }
+
+  void _onBackgroundTap() {
+    switch (widget.backgroundTapBehavior) {
+      case BackgroundTapBehavior.startOrSnapToNearest:
+        if (_ticker.isActive) {
+          _ticker.stop();
+          animateToClosestStep();
+        } else {
+          _restartTicker();
+        }
+        break;
+      case BackgroundTapBehavior.startOrFreeze:
+        if (_ticker.isActive) {
+          _ticker.stop();
+        } else {
+          _restartTicker();
+        }
+        break;
+      case BackgroundTapBehavior.none:
+        break;
+    }
+  }
+
+  void _onChildTap(int index) {
+    switch (widget.childTapBehavior) {
+      case ChildTapBehavior.doNothing:
+        break;
+      case ChildTapBehavior.transparent:
+        _onBackgroundTap();
+        break;
+      case ChildTapBehavior.stopAndSnapToChild:
+        bringItemIntoFocus(index);
+        break;
+    }
+    if (widget.children[index].onTap != null) {
+      widget.children[index].onTap!();
+    }
+  }
+
+  Future<void> animateToClosestStep() async {
+    if (widget.children.isEmpty) return;
+
+    // Find the index with the zTranslation closest to -1.0
+    (int, double) indexAndZTranslation = (0, 0);
+    for (int i = 0; i < widget.children.length; i++) {
+      double zTranslation = getZTranslation(i);
+      if (zTranslation < indexAndZTranslation.$2) {
+        indexAndZTranslation = (i, zTranslation);
+      }
+    }
+    await bringItemIntoFocus(indexAndZTranslation.$1);
+  }
+
+  // This function should bring the item to the center of the carousel,
+  // to the closest location to the user.
+  // It could be implemented in different ways, that is, in what axis
+  // position should the carousel come to rest in?
+  // We can add more customization options later for the user to define the behaviour.
+  // TODO: FIXXXXXXX
+  Future<void> bringItemIntoFocus(int index) async {
+    await animateTo(
+      angleController: rollAngleController,
+      newAngle:
+          ((math.pi * 2) - (index * _stepAngle) + widget.roll.initialValue) %
+              (2 * math.pi),
+    );
+  }
+
   // Future<void> animateToPreviousStep() async {
   //   final int currentStep = (thetaController.value / _stepAngle).round();
   //   final int nextStep = currentStep - 1;
@@ -297,313 +384,257 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   //   final double nextAngle = nextStep * _stepAngle;
   //   await animateTo(nextAngle);
   // }
-  //
-  // Future<void> animateTo(
-  //   double nextAngle, [
-  //   int durationInMillis = animationTimeMillis,
-  // ]) async {
-  //   // If the direct linear path between _controller.value and nextAngle
-  //   // is shorter than half the circle (pi radians), directly animate to nextAngle
-  //   if ((thetaController.value - nextAngle).abs() < math.pi) {
-  //     await thetaController.animateTo(
-  //       nextAngle,
-  //       duration: Duration(milliseconds: durationInMillis),
-  //     );
-  //   } else {
-  //     late final double duration1;
-  //     if (thetaController.value <= math.pi) {
-  //       duration1 = durationInMillis *
-  //           ((thetaController.value - thetaController.lowerBound) /
-  //               ((thetaController.value - thetaController.lowerBound) +
-  //                   (thetaController.upperBound - nextAngle)));
-  //       await thetaController.animateTo(
-  //         thetaController.lowerBound,
-  //         duration: Duration(milliseconds: duration1.round()),
-  //       );
-  //       thetaController.value = thetaController.upperBound;
-  //     } else {
-  //       duration1 = durationInMillis *
-  //           ((thetaController.upperBound - thetaController.value) /
-  //               ((thetaController.upperBound - thetaController.value) +
-  //                   (nextAngle - thetaController.lowerBound)));
-  //       await thetaController.animateTo(
-  //         thetaController.upperBound,
-  //         duration: Duration(milliseconds: duration1.round()),
-  //       );
-  //       thetaController.value = thetaController.lowerBound;
-  //     }
-  //     await thetaController.animateTo(
-  //       nextAngle,
-  //       duration: Duration(milliseconds: durationInMillis - duration1.round()),
-  //     );
-  //   }
-  // }
-  //
-  // void onDragStart(DragStartDetails details) {
-  //   final bool isDragHorizontal = widget.dragDirection == Axis.horizontal;
-  //
-  //   initialPosition = isDragHorizontal
-  //       ? details.globalPosition.dx
-  //       : details.globalPosition.dy;
-  // }
-  //
-  // void onDragUpdate(DragUpdateDetails details) {
-  //   final bool isDragHorizontal = widget.dragDirection == Axis.horizontal;
-  //
-  //   final double dragDistance = initialPosition -
-  //       (isDragHorizontal
-  //           ? details.globalPosition.dx
-  //           : details.globalPosition.dy);
-  //   initialPosition = isDragHorizontal
-  //       ? details.globalPosition.dx
-  //       : details.globalPosition.dy;
-  //   final double angleInRadian = widget.clockwise
-  //       ? -_getAngleInRadFromXMovement(dragDistance)
-  //       : _getAngleInRadFromXMovement(dragDistance);
-  //   animateTo(
-  //     (thetaController.value - angleInRadian) % (2 * math.pi),
-  //     0,
-  //   );
-  // }
-  //
-  // void onDragEnd(DragEndDetails details) {
-  //   switch (widget.dragEndBehavior) {
-  //     case DragEndBehavior.doNothing:
-  //       break;
-  //     case DragEndBehavior.snapToNearest:
-  //       animateToClosestStep();
-  //       break;
-  //     case DragEndBehavior.continueRotating:
-  //       if (widget.thetaShouldRotate) {
-  //         thetaController.repeat();
-  //       } else {
-  //         animateToClosestStep();
-  //       }
-  //       break;
-  //   }
-  // }
+
+  Future<void> animateTo({
+    required AnimationController angleController,
+    required double newAngle,
+  }) async {
+    // If the direct linear path between _controller.value and the target angle
+    // is shorter than half the circle (pi radians), directly animate to the target angle
+    if ((angleController.value - newAngle).abs() < math.pi) {
+      await angleController.animateTo(
+        newAngle,
+        duration: Duration(milliseconds: widget.snapTimeInMillis),
+        curve: widget.snapCurve,
+      );
+    } else {
+      late final double duration1;
+      if (angleController.value <= math.pi) {
+        duration1 = widget.snapTimeInMillis *
+            ((angleController.value - angleController.lowerBound) /
+                ((angleController.value - angleController.lowerBound) +
+                    (angleController.upperBound - newAngle)));
+        await angleController.animateTo(
+          angleController.lowerBound,
+          duration: Duration(milliseconds: duration1.round()),
+          curve: widget.snapCurve,
+        );
+        angleController.value = angleController.upperBound;
+      } else {
+        duration1 = widget.snapTimeInMillis *
+            ((angleController.upperBound - angleController.value) /
+                ((angleController.upperBound - angleController.value) +
+                    (newAngle - angleController.lowerBound)));
+        await angleController.animateTo(
+          angleController.upperBound,
+          duration: Duration(milliseconds: duration1.round()),
+          curve: widget.snapCurve,
+        );
+        angleController.value = angleController.lowerBound;
+      }
+      await angleController.animateTo(
+        newAngle,
+        duration: Duration(
+          milliseconds: widget.snapTimeInMillis - duration1.round(),
+        ),
+        curve: widget.snapCurve,
+      );
+    }
+  }
+
+  (double, double) initialDragPosition = (0, 0);
+
+  void onDragStart(DragStartDetails details) {
+    initialDragPosition = (
+      details.globalPosition.dx,
+      details.globalPosition.dy,
+    );
+  }
+
+  void onDragUpdate(DragUpdateDetails details) {
+    final (double, double) dragDistance = (
+      initialDragPosition.$1 - details.globalPosition.dx,
+      initialDragPosition.$2 - details.globalPosition.dy,
+    );
+    initialDragPosition = (
+      details.globalPosition.dx,
+      details.globalPosition.dy,
+    );
+
+    // Length of an arc = radius * central angle in radians
+    final double horizontalAngleChange =
+        (dragDistance.$1 / widget.radius) * widget.dragSensitivity;
+    final double verticalAngleChange =
+        (dragDistance.$1 / widget.radius) * widget.dragSensitivity;
+
+    // TODO:
+    // animateTo(
+    //   (thetaController.value - angleInRadian) % (2 * math.pi),
+    //   0,
+    // );
+  }
+
+  void onDragEnd(DragEndDetails details) {
+    switch (widget.dragEndBehavior) {
+      case DragEndBehavior.remainFrozen:
+        break;
+      case DragEndBehavior.snapToNearest:
+        animateToClosestStep();
+        break;
+      case DragEndBehavior.returnToDefault:
+        _restartTicker();
+        break;
+    }
+  }
 
   double getRollOffset(int index) =>
-      (rollAngle + (index * _stepAngle)) % (2 * math.pi);
+      (rollAngleController.value + (index * _stepAngle)) % (2 * math.pi);
+
+  // The translation of the objects in the carousel is represented by the
+  // last column of Transformation1.
+  final Transformation positionTransformation = Transformation1();
 
   double getXTranslation(int index) =>
       -widget.radius *
-      Transformation.get20(
+      positionTransformation.get20(
         rollAngle: getRollOffset(index),
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
+        pitchAngle: pitchAngleController.value,
+        yawAngle: yawAngleController.value,
       );
 
   double getYTranslation(int index) =>
       -widget.radius *
-      Transformation.get21(
+      positionTransformation.get21(
         rollAngle: getRollOffset(index),
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
+        pitchAngle: pitchAngleController.value,
+        yawAngle: yawAngleController.value,
       );
 
   double getZTranslation(int index) =>
       -widget.radius *
-      Transformation.get22(
+      positionTransformation.get22(
         rollAngle: getRollOffset(index),
-        pitchAngle: pitchAngle,
-        yawAngle: yawAngle,
+        pitchAngle: pitchAngleController.value,
+        yawAngle: yawAngleController.value,
       );
 
   @override
   Widget build(BuildContext context) {
-    // To render them in order of how far they are to the
-    List<(int, double)> indexToZDistance = [];
-    for (int i = 0; i < widget.children.length; i++) {
-      indexToZDistance.add((i, getZTranslation(i)));
-    }
-    indexToZDistance.sort((a, b) => b.$2.compareTo(a.$2));
+    return AnimatedBuilder(
+        animation: Listenable.merge([
+          rollAngleController,
+          pitchAngleController,
+          yawAngleController,
+        ]),
+        builder: (context, child) {
+          // To render them in order of how far they are to the screen
+          List<(int, double)> indexToZDistance = [];
+          for (int i = 0; i < widget.children.length; i++) {
+            indexToZDistance.add((i, getZTranslation(i)));
+          }
+          indexToZDistance.sort((a, b) => b.$2.compareTo(a.$2));
 
-    int getIndexOf(int index) => indexToZDistance[index].$1;
+          int getIndexOf(int index) => indexToZDistance[index].$1;
 
-    return GestureDetector(
-      onTap: _onBackgroundTap,
-      // onHorizontalDragStart:
-      //     widget.isDragInteractive && isDragHorizontal ? onDragStart : null,
-      // onHorizontalDragUpdate:
-      //     widget.isDragInteractive && isDragHorizontal ? onDragUpdate : null,
-      // onHorizontalDragEnd:
-      //     widget.isDragInteractive && isDragHorizontal ? onDragEnd : null,
-      // onVerticalDragStart:
-      //     widget.isDragInteractive && !isDragHorizontal ? onDragStart : null,
-      // onVerticalDragUpdate:
-      //     widget.isDragInteractive && !isDragHorizontal ? onDragUpdate : null,
-      // onVerticalDragEnd:
-      //     widget.isDragInteractive && !isDragHorizontal ? onDragEnd : null,
-      child: ClipRect(
-        clipBehavior: widget.clipBehavior,
-        child: SizedBox(
-          width: double.infinity,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              // To enable dragging on the empty background
-              const Positioned.fill(
-                child: ColoredBox(color: Colors.transparent),
-              ),
-
-              // Background widget
-              if (widget.background != null)
-                Positioned.fill(child: widget.background!),
-
-              // Back half of the carousel
-              if (!widget.hideBackground)
-                for (int i = 0; i < widget.children.length; i++)
-                  if (indexToZDistance[i].$2 >= 0)
-                    _SubWidget(
-                      scale: widget.childScale,
-                      radius: widget.radius,
-                      perspectiveStrength: widget.perspectiveStrength,
-                      xTranslation: getXTranslation(getIndexOf(i)),
-                      yTranslation: getYTranslation(getIndexOf(i)),
-                      zTranslation: getZTranslation(getIndexOf(i)),
-                      rollAngle: getRollOffset(getIndexOf(i)),
-                      pitchAngle: pitchAngle,
-                      yawAngle: yawAngle,
-                      childrenAreAlwaysFacingForward:
-                          widget.childrenAreAlwaysFacingForward,
-                      child: widget.children[getIndexOf(i)].child,
-                      onTap: () {
-                        // switch (widget.childTapBehavior) {
-                        //   case ChildTapBehavior.doNothing:
-                        //     break;
-                        //   case ChildTapBehavior.transparent:
-                        //     _onBackgroundTap();
-                        //     break;
-                        //   case ChildTapBehavior.stopAndSnapToChild:
-                        //     animateToStep(getIndexOf(i));
-                        //     break;
-                        // }
-                        // if (widget.children[getIndexOf(i)].onTap != null) {
-                        //   widget.children[getIndexOf(i)].onTap!();
-                        // }
-                      },
+          return GestureDetector(
+            onTap: _onBackgroundTap,
+            onHorizontalDragStart:
+                widget.isDragInteractive ? onDragStart : null,
+            onHorizontalDragUpdate:
+                widget.isDragInteractive ? onDragUpdate : null,
+            onHorizontalDragEnd: widget.isDragInteractive ? onDragEnd : null,
+            onVerticalDragStart: widget.isDragInteractive ? onDragStart : null,
+            onVerticalDragUpdate:
+                widget.isDragInteractive ? onDragUpdate : null,
+            onVerticalDragEnd: widget.isDragInteractive ? onDragEnd : null,
+            child: ClipRect(
+              clipBehavior: widget.clipBehavior,
+              child: SizedBox(
+                width: double.infinity,
+                child: Stack(
+                  alignment: Alignment.center,
+                  clipBehavior: Clip.none,
+                  children: [
+                    // To enable dragging on the empty background
+                    const Positioned.fill(
+                      child: ColoredBox(color: Colors.transparent),
                     ),
 
-              // Then, render the blur
-              IgnorePointer(
-                ignoring: true,
-                child: BackdropFilter(
-                  blendMode: BlendMode.srcATop,
-                  filter: ImageFilter.blur(
-                    sigmaX: widget.backgroundBlur,
-                    sigmaY: widget.backgroundBlur,
-                  ),
-                  child: const ColoredBox(color: Colors.transparent),
-                ),
-              ),
+                    // Background widget
+                    if (widget.background != null)
+                      Positioned.fill(child: widget.background!),
 
-              // Core widget
-              if (widget.core != null)
-                AbsorbPointer(
-                  absorbing: true,
-                  child: widget.core!,
-                ),
+                    // Back half of the carousel
+                    if (!widget.hideBackground)
+                      for (int i = 0; i < widget.children.length; i++)
+                        if (indexToZDistance[i].$2 >= 0)
+                          _SubWidget(
+                            scale: widget.childScale,
+                            radius: widget.radius,
+                            perspectiveStrength: widget.perspectiveStrength,
+                            xTranslation: getXTranslation(getIndexOf(i)),
+                            yTranslation: getYTranslation(getIndexOf(i)),
+                            zTranslation: getZTranslation(getIndexOf(i)),
+                            rollAngle: getRollOffset(getIndexOf(i)),
+                            pitchAngle: pitchAngleController.value,
+                            yawAngle: yawAngleController.value,
+                            childOrientation: widget.childOrientation,
+                            child: widget.children[getIndexOf(i)].child,
+                            onTap: () => _onChildTap(getIndexOf(i)),
+                          ),
 
-              // Front half of the carousel
-              if (!widget.hideForeground)
-                for (int i = 0; i < widget.children.length; i++)
-                  if (indexToZDistance[i].$2 < 0)
-                    _SubWidget(
-                      scale: widget.childScale,
-                      radius: widget.radius,
-                      perspectiveStrength: widget.perspectiveStrength,
-                      xTranslation: getXTranslation(getIndexOf(i)),
-                      yTranslation: getYTranslation(getIndexOf(i)),
-                      zTranslation: getZTranslation(getIndexOf(i)),
-                      rollAngle: getRollOffset(getIndexOf(i)),
-                      pitchAngle: pitchAngle,
-                      yawAngle: yawAngle,
-                      childrenAreAlwaysFacingForward:
-                          widget.childrenAreAlwaysFacingForward,
-                      child: widget.children[getIndexOf(i)].child,
-                      onTap: () {
-                        // switch (widget.childTapBehavior) {
-                        //   case ChildTapBehavior.doNothing:
-                        //     break;
-                        //   case ChildTapBehavior.transparent:
-                        //     _onBackgroundTap();
-                        //     break;
-                        //   case ChildTapBehavior.stopAndSnapToChild:
-                        //     animateToStep(getIndexOf(i));
-                        //     break;
-                        // }
-                        // if (widget.children[getIndexOf(i)].onTap != null) {
-                        //   widget.children[getIndexOf(i)].onTap!();
-                        // }
-                      },
+                    // Then, render the blur
+                    IgnorePointer(
+                      ignoring: true,
+                      child: BackdropFilter(
+                        blendMode: BlendMode.srcATop,
+                        filter: ImageFilter.blur(
+                          sigmaX: widget.backgroundBlur,
+                          sigmaY: widget.backgroundBlur,
+                        ),
+                        child: const ColoredBox(color: Colors.transparent),
+                      ),
                     ),
 
-              //TODO:
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text(
-                    (getZTranslation(0) / widget.radius).toStringAsFixed(2),
-                    style: TextStyle(fontSize: 30),
-                  ),
-                  // Text(
-                  //   (getRollOffset(0) * 180 / math.pi).toStringAsFixed(2),
-                  //   style: TextStyle(fontSize: 30),
-                  // ),
-                  const SizedBox(height: 300),
-                  // Text(
-                  //   widget.pitch
-                  //       .getCurrentValue(elapsedTime: _elapsedTime)
-                  //       .toStringAsFixed(2),
-                  //   style: TextStyle(fontSize: 30),
-                  // ),
-                  // const SizedBox(height: 100),
-                  // Text(
-                  //   widget.yaw
-                  //       .getCurrentValue(elapsedTime: _elapsedTime)
-                  //       .toStringAsFixed(2),
-                  //   style: TextStyle(fontSize: 30),
-                  // ),
-                  // Text(
-                  //   (math.asin(getXTranslation(0) / getMaxXWidthAtIndex(0)) * 180 / math.pi)
-                  //       .toStringAsFixed(2),
-                  //   style: TextStyle(fontSize: 30),
-                  // ),
-                  // Text(
-                  //   (getZFraction(0)).toStringAsFixed(2),
-                  //   style: TextStyle(fontSize: 30),
-                  // ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+                    // Core widget
+                    if (widget.core != null)
+                      AbsorbPointer(
+                        absorbing: true,
+                        child: widget.core!,
+                      ),
 
-  void _onBackgroundTap() {
-    // switch (widget.backgroundTapBehavior) {
-    //   case BackgroundTapBehavior.startAndSnapToNearest:
-    //     if (!thetaIsAnimating) {
-    //       thetaController.repeat();
-    //     } else {
-    //       animateToClosestStep();
-    //     }
-    //     break;
-    //   case BackgroundTapBehavior.startAndFreeze:
-    //     if (!thetaIsAnimating) {
-    //       thetaController.repeat();
-    //     } else {
-    //       thetaController.value = thetaController.value;
-    //     }
-    //     break;
-    //   case BackgroundTapBehavior.none:
-    //     break;
-    // }
+                    // Front half of the carousel
+                    if (!widget.hideForeground)
+                      for (int i = 0; i < widget.children.length; i++)
+                        if (indexToZDistance[i].$2 < 0)
+                          _SubWidget(
+                            scale: widget.childScale,
+                            radius: widget.radius,
+                            perspectiveStrength: widget.perspectiveStrength,
+                            xTranslation: getXTranslation(getIndexOf(i)),
+                            yTranslation: getYTranslation(getIndexOf(i)),
+                            zTranslation: getZTranslation(getIndexOf(i)),
+                            rollAngle: getRollOffset(getIndexOf(i)),
+                            pitchAngle: pitchAngleController.value,
+                            yawAngle: yawAngleController.value,
+                            childOrientation: widget.childOrientation,
+                            child: widget.children[getIndexOf(i)].child,
+                            onTap: () => _onChildTap(getIndexOf(i)),
+                          ),
+
+                    // // For debugging
+                    // Column(
+                    //   mainAxisSize: MainAxisSize.min,
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   crossAxisAlignment: CrossAxisAlignment.center,
+                    //   children: [
+                    //     Text(
+                    //       (getZTranslation(0) / widget.radius)
+                    //           .toStringAsFixed(2),
+                    //       style: TextStyle(fontSize: 30),
+                    //     ),
+                    //     // Text(
+                    //     //   (getRollOffset(0) * 180 / math.pi).toStringAsFixed(2),
+                    //     //   style: TextStyle(fontSize: 30),
+                    //     // ),
+                    //     const SizedBox(height: 300),
+                    //   ],
+                    // ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        });
   }
 }
