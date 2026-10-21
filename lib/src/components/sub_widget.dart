@@ -45,87 +45,79 @@ class _SubWidget extends StatelessWidget {
     //     '${UtilFunctions.inDegrees(pitchAngle).toStringAsFixed(2)}, '
     //     '${UtilFunctions.inDegrees(yawAngle).toStringAsFixed(2)}');
 
-    final Transformation? transformation = switch (childOrientation) {
-      ChildOrientation.backingCenter => Transformation1(),
-      ChildOrientation.facingYAxis => Transformation2(),
-      ChildOrientation.facingScreen => null,
-    };
+    late final vector_math.Matrix3? matrix3;
 
-    final vector_math.Matrix4 matrix4 = switch (childOrientation) {
-      (ChildOrientation.backingCenter || ChildOrientation.facingYAxis) =>
-        Matrix4(
-          transformation!.get00(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          transformation.get01(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          transformation.get02(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          0,
-          transformation.get10(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          transformation.get11(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          transformation.get12(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          0,
-          transformation.get20(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          transformation.get21(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          transformation.get22(
-            rollAngle: rollAngle,
-            pitchAngle: pitchAngle,
-            yawAngle: yawAngle,
-          ),
-          perspectiveStrength,
-          xTranslation,
-          yTranslation,
-          zTranslation,
-          1,
-        ),
-      ChildOrientation.facingScreen => Matrix4(
-          1,
-          0,
-          0,
-          0,
-          0,
-          1,
-          0,
-          0,
-          0,
-          0,
-          1,
-          perspectiveStrength,
-          xTranslation,
-          yTranslation,
-          zTranslation,
-          1,
-        ),
-    };
+    if (childOrientation is OrientedFacingScreen) {
+      matrix3 = null;
+    } else if (childOrientation is OrientedBackingCenter) {
+      matrix3 = Transformations.transformation1(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+      );
+    } else if (childOrientation is OrientedWithXTilt) {
+      matrix3 = Transformations.transformation2(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+        a: childOrientation.tiltAngle!,
+      );
+    } else if (childOrientation is OrientedWithYTilt) {
+      matrix3 = Transformations.transformation3(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+        a: childOrientation.tiltAngle!,
+      );
+    } else if (childOrientation is OrientedWithZTilt) {
+      matrix3 = Transformations.transformation4(
+        rollAngle: rollAngle,
+        pitchAngle: pitchAngle,
+        yawAngle: yawAngle,
+        a: childOrientation.tiltAngle!,
+      );
+    }
+
+    late final vector_math.Matrix4 matrix4;
+    if (childOrientation is OrientedFacingScreen) {
+      matrix4 = Matrix4(
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        perspectiveStrength,
+        xTranslation,
+        yTranslation,
+        zTranslation,
+        1,
+      );
+    } else {
+      matrix4 = Matrix4(
+        matrix3!.entry(0, 0),
+        matrix3.entry(1, 0),
+        matrix3.entry(2, 0),
+        0,
+        matrix3.entry(0, 1),
+        matrix3.entry(1, 1),
+        matrix3.entry(2, 1),
+        0,
+        matrix3.entry(0, 2),
+        matrix3.entry(1, 2),
+        matrix3.entry(2, 2),
+        perspectiveStrength,
+        xTranslation,
+        yTranslation,
+        zTranslation,
+        1,
+      );
+    }
 
     // TODO: The object is moving in the z dimension in 3d space but the perspectiveStrength is not
     // applied to the motion.

@@ -9,8 +9,6 @@ import 'package:flutter_3d_carousel/src/utils/utils.dart';
 
 part 'sub_widget.dart';
 
-// TODO: Create Presets: .horizontal, .vertical, .spinning
-
 // TODO: Show guiding axes
 
 /// A 3D carousel widget that displays children in a circular arrangement with
@@ -66,8 +64,10 @@ class CarouselWidget3D extends StatefulWidget {
   final double backgroundBlur;
 
   /// The direction the children of the carousel will be oriented towards.
+  /// That is, what should be the orientation of a single child in the middle
+  /// of the screen with roll, pitch, and yaw set to zero.
   ///
-  /// Defaults to [ChildOrientation.backingCenter].
+  /// Defaults to [OrientedBackingCenter].
   final ChildOrientation childOrientation;
 
   /// This function sets the rotation of the axis around its own longitudinal line.
@@ -145,7 +145,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.hideForeground = false,
     this.hideBackground = false,
     this.backgroundBlur = 3.0,
-    this.childOrientation = ChildOrientation.backingCenter,
+    this.childOrientation = const OrientedBackingCenter(),
     this.roll = const ConstantInputFunction(value: 0),
     this.pitch = const ConstantInputFunction(value: 0),
     this.yaw = const ConstantInputFunction(value: 0),
@@ -161,6 +161,62 @@ class CarouselWidget3D extends StatefulWidget {
     this.core,
     required this.children,
   });
+
+  /// A constructor that gives a straightforward horizontal carousel animation.
+  const CarouselWidget3D.horizontal({
+    super.key,
+    required this.radius,
+    this.childScale = 1.0,
+    this.backgroundTapBehavior = BackgroundTapBehavior.none,
+    this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
+    this.isDragInteractive = true,
+    this.dragEndBehavior = DragEndBehavior.snapToNearest,
+    this.hideForeground = false,
+    this.hideBackground = false,
+    this.backgroundBlur = 3.0,
+    this.childOrientation = const OrientedBackingCenter(),
+    this.roll = const ConstantInputFunction(value: 0),
+    this.snapTimeInMillis = 100,
+    this.snapCurve = Curves.linear,
+    this.perspectiveStrength = 0.001,
+    this.dragSensitivity = 1.0,
+    this.clipBehavior = Clip.hardEdge,
+    this.onRollAngleChanged,
+    this.onPitchAngleChanged,
+    this.onYawAngleChanged,
+    this.background,
+    this.core,
+    required this.children,
+  })  : pitch = const ConstantInputFunction(value: 0),
+        yaw = const ConstantInputFunction(value: 0);
+
+  /// A constructor that gives a straightforward vertical carousel animation.
+  const CarouselWidget3D.vertical({
+    super.key,
+    required this.radius,
+    this.childScale = 1.0,
+    this.backgroundTapBehavior = BackgroundTapBehavior.none,
+    this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
+    this.isDragInteractive = true,
+    this.dragEndBehavior = DragEndBehavior.snapToNearest,
+    this.hideForeground = false,
+    this.hideBackground = false,
+    this.backgroundBlur = 3.0,
+    this.roll = const ConstantInputFunction(value: 0),
+    this.snapTimeInMillis = 100,
+    this.snapCurve = Curves.linear,
+    this.perspectiveStrength = 0.001,
+    this.dragSensitivity = 1.0,
+    this.clipBehavior = Clip.hardEdge,
+    this.onRollAngleChanged,
+    this.onPitchAngleChanged,
+    this.onYawAngleChanged,
+    this.background,
+    this.core,
+    required this.children,
+  })  : pitch = const ConstantInputFunction(value: math.pi / 2),
+        yaw = const ConstantInputFunction(value: math.pi / 2),
+        childOrientation = const OrientedWithZTilt(math.pi / 2);
 
   @override
   State<CarouselWidget3D> createState() => _CarouselWidget3DState();
@@ -229,8 +285,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
         widget.pitch != oldWidget.pitch ||
         widget.yaw != oldWidget.yaw ||
         widget.childOrientation != oldWidget.childOrientation ||
-        widget.snapCurve != oldWidget.snapCurve
-    ) {
+        widget.snapCurve != oldWidget.snapCurve) {
       // TODO: What to do if someone sets the motion to stop
       if (_ticker.isActive) {
         _restartTicker();
@@ -481,32 +536,22 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       (rollAngleController.value + (index * _stepAngle)) % (2 * math.pi);
 
   // The translation of the objects in the carousel is represented by the
-  // last column of Transformation1.
-  final Transformation positionTransformation = Transformation1();
+  // last column of Transformations.transformation1.
+  vector_math.Matrix3 getPositionMatrix(int index) =>
+      Transformations.transformation1(
+        rollAngle: getRollOffset(index),
+        pitchAngle: pitchAngleController.value,
+        yawAngle: yawAngleController.value,
+      );
 
   double getXTranslation(int index) =>
-      -widget.radius *
-      positionTransformation.get20(
-        rollAngle: getRollOffset(index),
-        pitchAngle: pitchAngleController.value,
-        yawAngle: yawAngleController.value,
-      );
+      -widget.radius * getPositionMatrix(index).entry(0, 2);
 
   double getYTranslation(int index) =>
-      -widget.radius *
-      positionTransformation.get21(
-        rollAngle: getRollOffset(index),
-        pitchAngle: pitchAngleController.value,
-        yawAngle: yawAngleController.value,
-      );
+      -widget.radius * getPositionMatrix(index).entry(1, 2);
 
   double getZTranslation(int index) =>
-      -widget.radius *
-      positionTransformation.get22(
-        rollAngle: getRollOffset(index),
-        pitchAngle: pitchAngleController.value,
-        yawAngle: yawAngleController.value,
-      );
+      -widget.radius * getPositionMatrix(index).entry(2, 2);
 
   @override
   Widget build(BuildContext context) {

@@ -3,312 +3,139 @@ import 'dart:math' as math;
 import 'package:flutter_3d_carousel/flutter_3d_carousel.dart';
 import 'package:vector_math/vector_math_64.dart' as vector_math;
 
+// TODO: Write the calculations for these in an explainer article
+
 /// The naming here is [column number][row number].
 ///
-sealed class Transformation {
-  /// The entire matrix as a Matrix3 object
-  vector_math.Matrix3 getTransformationMatrix({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 0, Row 0
-  double get00({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 0, Row 1
-  double get01({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 0, Row 2
-  double get02({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 1, Row 0
-  double get10({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 1, Row 1
-  double get11({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 1, Row 2
-  double get12({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 2, Row 0
-  double get20({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 2, Row 1
-  double get21({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-
-  /// Column 2, Row 2
-  double get22({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  });
-}
-
-/// This is the transformation that corresponds to [ChildOrientation.backingCenter].
-class Transformation1 extends Transformation {
-  @override
-  vector_math.Matrix3 getTransformationMatrix({
+sealed class Transformations {
+  /// This is the transformation that corresponds to [ChildOrientation.backingCenter].
+  static vector_math.Matrix3 transformation1({
     required double rollAngle,
     required double pitchAngle,
     required double yawAngle,
   }) {
-    return vector_math.Matrix3(
-      get00(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get01(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get02(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get10(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get11(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get12(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get20(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get21(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get22(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-    );
+    final double cr = math.cos(rollAngle);
+    final double sr = math.sin(rollAngle);
+    final double cp = math.cos(pitchAngle);
+    final double sp = math.sin(pitchAngle);
+    final double cy = math.cos(yawAngle);
+    final double sy = math.sin(yawAngle);
+
+    final double _00 = (cy * cr) - (sy * cp * sr);
+    final double _01 = sp * sr;
+    final double _02 = (sy * cr) + (cy * cp * sr);
+    final double _10 = sy * sp;
+    final double _11 = cp;
+    final double _12 = -(cy * sp);
+    final double _20 = -(cy * sr) - (sy * cp * cr);
+    final double _21 = sp * cr;
+    final double _22 = -(sy * sr) + (cy * cp * cr);
+
+    return vector_math.Matrix3(_00, _01, _02, _10, _11, _12, _20, _21, _22);
   }
 
-  @override
-  double get00({
+  /// This is the transformation that corresponds to [OrientedWithXTilt].
+  ///
+  /// It rotates the children in the X axis before applying [transformation1].
+  static vector_math.Matrix3 transformation2({
     required double rollAngle,
     required double pitchAngle,
     required double yawAngle,
+    double a = math.pi / 2,
   }) {
-    return (math.cos(yawAngle) * math.cos(rollAngle)) -
-        (math.sin(yawAngle) * math.cos(pitchAngle) * math.sin(rollAngle));
+    final double cr = math.cos(rollAngle);
+    final double sr = math.sin(rollAngle);
+    final double cp = math.cos(pitchAngle);
+    final double sp = math.sin(pitchAngle);
+    final double cy = math.cos(yawAngle);
+    final double sy = math.sin(yawAngle);
+    final double sa = math.sin(a);
+    final double ca = math.cos(a);
+
+    final double _00 = (cy * cr) - (sy * cp * sr);
+    final double _01 = sp * sr;
+    final double _02 = (sy * cr) + (cy * cp * sr);
+    final double _10 = (sy * sp * ca) - (cy * sr * sa) - (sy * cp * cr * sa);
+    final double _11 = (cp * ca) + (sp * cr * sa);
+    final double _12 = -(cy * sp * ca) - (sy * sr * sa) + (cy * cp * cr * sa);
+    final double _20 = -(sy * sp * sa) - (cy * sr * ca) - (sy * cp * cr * ca);
+    final double _21 = -(cp * sa) + (sp * cr * ca);
+    final double _22 = (cy * sp * sa) - (sy * sr * ca) + (cy * cp * cr * ca);
+
+    return vector_math.Matrix3(_00, _01, _02, _10, _11, _12, _20, _21, _22);
   }
 
-  @override
-  double get01({
+  /// This is the transformation that corresponds to [OrientedWithYTilt].
+  ///
+  /// It rotates the children in the Y axis before applying [transformation1].
+  static vector_math.Matrix3 transformation3({
     required double rollAngle,
     required double pitchAngle,
     required double yawAngle,
+    double a = math.pi / 2,
   }) {
-    return math.sin(pitchAngle) * math.sin(rollAngle);
+    final double cr = math.cos(rollAngle);
+    final double sr = math.sin(rollAngle);
+    final double cp = math.cos(pitchAngle);
+    final double sp = math.sin(pitchAngle);
+    final double cy = math.cos(yawAngle);
+    final double sy = math.sin(yawAngle);
+    final double sa = math.sin(a);
+    final double ca = math.cos(a);
+
+    final double _00 = (cy * cr * ca) -
+        (sy * cp * sr * ca) -
+        (cy * sr * sa) -
+        (sy * cp * cr * sa);
+    final double _01 = (sp * sr * ca) + (sp * cr * sa);
+    final double _02 = (sy * cr * ca) +
+        (cy * cp * sr * ca) -
+        (sy * sr * sa) -
+        (cy * cp * cr * sa);
+    final double _10 = sy * sp;
+    final double _11 = cp;
+    final double _12 = -(cy * sp);
+    final double _20 = -(cy * cr * sa) +
+        (sy * cp * sr * sa) -
+        (cy * sr * ca) -
+        (sy * cp * cr * ca);
+    final double _21 = -(sp * sr * sa) + (sp * sr * ca);
+    final double _22 = -(sy * cr * sa) -
+        (cy * cp * sr * sa) -
+        (sy * sr * ca) +
+        (sy * cp * cr * ca);
+
+    return vector_math.Matrix3(_00, _01, _02, _10, _11, _12, _20, _21, _22);
   }
 
-  @override
-  double get02({
+  /// This is the transformation that corresponds to [OrientedWithZTilt].
+  ///
+  /// It rotates the children in the Z axis before applying [transformation1].
+  static vector_math.Matrix3 transformation4({
     required double rollAngle,
     required double pitchAngle,
     required double yawAngle,
+    double a = math.pi / 2,
   }) {
-    return (math.sin(yawAngle) * math.cos(rollAngle)) +
-        (math.cos(yawAngle) * math.cos(pitchAngle) * math.sin(rollAngle));
-  }
+    final double cr = math.cos(rollAngle);
+    final double sr = math.sin(rollAngle);
+    final double cp = math.cos(pitchAngle);
+    final double sp = math.sin(pitchAngle);
+    final double cy = math.cos(yawAngle);
+    final double sy = math.sin(yawAngle);
+    final double sa = math.sin(a);
+    final double ca = math.cos(a);
 
-  @override
-  double get10({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return math.sin(yawAngle) * math.sin(pitchAngle);
-  }
+    final double _00 = (cy * cr * ca) - (sy * cp * sr * ca) + (sy * sp * sa);
+    final double _01 = (sp * sr * ca) + (cp * sa);
+    final double _02 = (sy * cr * ca) + (cy * cp * sr * ca) - (cy * sp * sa);
+    final double _10 = -(cy * cr * sa) + (sy * cp * sr * sa) + (sy * sp * ca);
+    final double _11 = -(sp * sr * sa) + (cp * ca);
+    final double _12 = -(sy * cr * sa) - (cy * cp * sr * sa) - (cy * sp * ca);
+    final double _20 = -(cy * sr) - (sy * cp * cr);
+    final double _21 = sp * cr;
+    final double _22 = -(sy * sr) + (cy * cp * cr);
 
-  @override
-  double get11({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return math.cos(pitchAngle);
-  }
-
-  @override
-  double get12({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return -(math.cos(yawAngle) * math.sin(pitchAngle));
-  }
-
-  @override
-  double get20({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return -(math.cos(yawAngle) * math.sin(rollAngle)) -
-        (math.sin(yawAngle) * math.cos(pitchAngle) * math.cos(rollAngle));
-  }
-
-  @override
-  double get21({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return math.sin(pitchAngle) * math.cos(rollAngle);
-  }
-
-  @override
-  double get22({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return -(math.sin(yawAngle) * math.sin(rollAngle)) +
-        (math.cos(yawAngle) * math.cos(pitchAngle) * math.cos(rollAngle));
-  }
-}
-
-/// This is the transformation that corresponds to [ChildOrientation.facingYAxis].
-class Transformation2 extends Transformation {
-  final double a = math.pi / 2;
-
-  @override
-  vector_math.Matrix3 getTransformationMatrix({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return vector_math.Matrix3(
-      get00(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get01(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get02(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get10(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get11(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get12(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get20(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get21(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-      get22(rollAngle: rollAngle, pitchAngle: pitchAngle, yawAngle: yawAngle),
-    );
-  }
-
-  @override
-  double get00({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return (math.cos(yawAngle) * math.cos(rollAngle)) -
-        (math.sin(yawAngle) * math.cos(pitchAngle) * math.sin(rollAngle));
-  }
-
-  @override
-  double get01({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return math.sin(pitchAngle) * math.sin(rollAngle);
-  }
-
-  @override
-  double get02({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return (math.sin(yawAngle) * math.cos(rollAngle)) +
-        (math.cos(yawAngle) * math.cos(pitchAngle) * math.sin(rollAngle));
-  }
-
-  @override
-  double get10({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return (math.sin(yawAngle) * math.sin(pitchAngle) * math.cos(a)) -
-        (math.cos(yawAngle) * math.sin(rollAngle) * math.sin(a)) -
-        (math.sin(yawAngle) *
-            math.cos(pitchAngle) *
-            math.cos(rollAngle) *
-            math.sin(a));
-  }
-
-  @override
-  double get11({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return (math.cos(pitchAngle) * math.cos(a)) +
-        (math.sin(pitchAngle) * math.cos(rollAngle) * math.sin(a));
-  }
-
-  @override
-  double get12({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return -(math.cos(yawAngle) * math.sin(pitchAngle) * math.cos(a)) -
-        (math.sin(yawAngle) * math.sin(rollAngle) * math.sin(a)) +
-        (math.cos(yawAngle) *
-            math.cos(pitchAngle) *
-            math.cos(rollAngle) *
-            math.sin(a));
-  }
-
-  @override
-  double get20({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return -(math.sin(yawAngle) * math.sin(pitchAngle) * math.sin(a)) -
-        (math.cos(yawAngle) * math.sin(rollAngle) * math.cos(a)) -
-        (math.sin(yawAngle) *
-            math.cos(pitchAngle) *
-            math.cos(rollAngle) *
-            math.cos(a));
-  }
-
-  @override
-  double get21({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return -(math.cos(pitchAngle) * math.sin(a)) +
-        (math.sin(pitchAngle) * math.cos(rollAngle) * math.cos(a));
-  }
-
-  @override
-  double get22({
-    required double rollAngle,
-    required double pitchAngle,
-    required double yawAngle,
-  }) {
-    return (math.cos(yawAngle) * math.sin(pitchAngle) * math.sin(a)) -
-        (math.sin(yawAngle) * math.sin(rollAngle) * math.cos(a)) +
-        (math.cos(yawAngle) *
-            math.cos(pitchAngle) *
-            math.cos(rollAngle) *
-            math.cos(a));
+    return vector_math.Matrix3(_00, _01, _02, _10, _11, _12, _20, _21, _22);
   }
 }

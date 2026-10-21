@@ -280,7 +280,8 @@ List<Color> colors = [
 Ideas and feature requests are welcome. Here are some ideas for future updates:
 
 - Add option to add only some of the children to the carousel. For example, 100 children, show 12.
-
+- Animating the orientation of the children.
+- Combining X, Y, and Z child orientations.
 
 ## Contributing
 Contributions from anyone are welcome. To contribute to the project, please follow these steps:
