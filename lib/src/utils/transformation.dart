@@ -6,6 +6,27 @@ import 'package:vector_math/vector_math_64.dart' as vector_math;
 /// The naming here is [column number][row number].
 ///
 sealed class Transformations {
+  /// The translation of the objects in the carousel is represented by the
+  /// last column of [transformation1].
+  static vector_math.Vector3 positionTransformation({
+    required double rollAngle,
+    required double pitchAngle,
+    required double yawAngle,
+  }) {
+    final double cr = math.cos(rollAngle);
+    final double sr = math.sin(rollAngle);
+    final double cp = math.cos(pitchAngle);
+    final double sp = math.sin(pitchAngle);
+    final double cy = math.cos(yawAngle);
+    final double sy = math.sin(yawAngle);
+
+    final double _20 = -(cy * sr) - (sy * cp * cr);
+    final double _21 = sp * cr;
+    final double _22 = -(sy * sr) + (cy * cp * cr);
+
+    return vector_math.Vector3(_20, _21, _22);
+  }
+
   /// This is the transformation that corresponds to [ChildOrientation.backingCenter].
   static vector_math.Matrix3 transformation1({
     required double rollAngle,

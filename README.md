@@ -1,9 +1,12 @@
 # flutter_3d_carousel
 
-This is a 3d carousel animation project built in flutter. The 3D carousel responds to button clicks and swipes and can rotate infinitely.
+This is a 3d carousel animation project built in flutter.
+The carousel has 3 degrees of freedom (DoF); roll, pitch, and yaw. The package can be used in many ways: simple and complex.
+The 3D carousel responds to button clicks and swipes and can rotate infinitely. It is implemented natively in flutter. No external dependencies are used.
 
-It is implemented natively in flutter. No external dependencies are used.
+Check out the article for more information and examples to understand how the package works: 
 
+TODO: Link the article
 
 ## Example:
 
@@ -274,12 +277,19 @@ List<Color> colors = [
 
 <img src="assets/gifs/recording_3.gif" width="350" alt="Screen recording of Example 3"> 
 
+## Issues
+- **Major issue:** The children are rotating in the Y and X axis but it is not showing the perspective difference. This is why the objects in the carousel may not look perfectly aligned at the sides. The issue is from the flutter framework, as far as I can tell. Check out this issue for more info: https://github.com/flutter/flutter/issues/194632.
+- Snapping should bring the item to the center of the carousel, to the closest location to the user. It can be implemented in different ways, that is, in what axis position should the carousel come to rest in? For now, I am implementing only snapping to horizontal and vertical axes. We can add more customization options later for the user to define the behaviour. Perfect is the enemy of done.
+- Are there too many properties? Is there a way to group them?
+- The carousel can be more efficient algorithmically.
 
 ## Ideas for features to add:
 
 Ideas and feature requests are welcome. Here are some ideas for future updates:
 
-- Add option to add only some of the children to the carousel. For example, 100 children, show 12.
+- Show guiding X, Y, and Z axes for debugging and demonstration to show the motion.
+- Programmatically freeze or move to the next and previous object in the carousel from outside.
+- Add option to show only some of the children to the carousel. For example, 100 children, show 12.
 - Animating the orientation of the children.
 - Combining X, Y, and Z child orientations.
 

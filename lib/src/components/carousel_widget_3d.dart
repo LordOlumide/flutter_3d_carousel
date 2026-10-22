@@ -9,22 +9,11 @@ import 'package:flutter_3d_carousel/src/utils/utils.dart';
 
 part 'sub_widget.dart';
 
-// TODO: Write article including the calculations
-// TODO: Show guiding axes
-// TODO: Handle all Gesture Responses
-// TODO: Programmatically freeze or move to the next and previous object in the carousel
-
-// TODO: The children are rotating in the Y and X axis but it is not showing the perspective difference.
-// The issue is from the flutter framework, as far as I can tell.
-// Check out this issue for more info: https://github.com/flutter/flutter/issues/194632
-
-// TODO: Handle snapping to an itme
-
 /// A 3D carousel widget that displays children in a circular arrangement with
 /// 3D perspective effects and interactive rotation.
 ///
 /// There are 3 degrees of movement: roll, pitch, yaw.
-/// To understand how they work, check out this article
+/// To understand how they work, check out this article: TODO: Link article here
 ///
 /// **Note:** The [CarouselChild.onTap] will be called no matter what value is assigned to [childTapBehavior].
 /// The [childTapBehavior] defines how the carousel will animate when a child is tapped.
@@ -49,7 +38,7 @@ class CarouselWidget3D extends StatefulWidget {
 
   /// Whether the carousel should respond to drag gestures.
   ///
-  /// Defaults to true
+  /// Defaults to [DragBehaviour.twoDimensional]
   final DragBehaviour dragBehaviour;
 
   /// Determines how the carousel behaves after a drag interaction ends. See [DragEndBehavior] for available options.
@@ -169,7 +158,11 @@ class CarouselWidget3D extends StatefulWidget {
     this.background,
     this.core,
     required this.children,
-  });
+  })  : assert(radius > 0, 'Carousel radius should be greater than zero'),
+        assert(
+          snapTimeInMillis > 0,
+          'snapTimeInMillis must be greater than zero',
+        );
 
   /// A constructor that gives a straightforward horizontal carousel animation.
   const CarouselWidget3D.horizontal({
@@ -196,7 +189,12 @@ class CarouselWidget3D extends StatefulWidget {
     this.background,
     this.core,
     required this.children,
-  })  : pitch = const ConstantInputFunction(value: 0),
+  })  : assert(radius > 0, 'Carousel radius should be greater than zero'),
+        assert(
+          snapTimeInMillis > 0,
+          'snapTimeInMillis must be greater than zero',
+        ),
+        pitch = const ConstantInputFunction(value: 0),
         yaw = const ConstantInputFunction(value: 0);
 
   /// A constructor that gives a straightforward vertical carousel animation.
@@ -223,7 +221,12 @@ class CarouselWidget3D extends StatefulWidget {
     this.background,
     this.core,
     required this.children,
-  })  : pitch = const ConstantInputFunction(value: math.pi / 2),
+  })  : assert(radius > 0, 'Carousel radius should be greater than zero'),
+        assert(
+          snapTimeInMillis > 0,
+          'snapTimeInMillis must be greater than zero',
+        ),
+        pitch = const ConstantInputFunction(value: math.pi / 2),
         yaw = const ConstantInputFunction(value: math.pi / 2),
         childOrientation = const OrientedWithZTilt(math.pi / 2);
 
@@ -266,7 +269,8 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       upperBound: math.pi * 2,
     );
 
-    _stepAngle = (2 * math.pi) / widget.children.length;
+    _stepAngle =
+        widget.children.isEmpty ? 0 : (2 * math.pi) / widget.children.length;
 
     _ticker = createTicker((Duration elapsed) {
       _elapsedTime = elapsed;
@@ -280,21 +284,9 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   void didUpdateWidget(covariant CarouselWidget3D oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Everything set up in `initState()` needs to be monitored here:
-
     if (widget.children.length != oldWidget.children.length) {
-      _stepAngle = (2 * math.pi) / widget.children.length;
-    }
-
-    if (widget.roll != oldWidget.roll ||
-        widget.pitch != oldWidget.pitch ||
-        widget.yaw != oldWidget.yaw ||
-        widget.childOrientation != oldWidget.childOrientation ||
-        widget.snapCurve != oldWidget.snapCurve) {
-      // TODO: What to do if someone sets the motion to stop
-      if (_ticker.isActive) {
-        _restartTicker();
-      }
+      _stepAngle =
+          widget.children.isEmpty ? 0 : (2 * math.pi) / widget.children.length;
     }
   }
 
@@ -352,6 +344,10 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     final double newInitialPitchValue = pitchAngleController.value;
     final double newInitialYawValue = yawAngleController.value;
 
+    if (_ticker.isActive) {
+      _ticker.stop(canceled: true);
+    }
+    _ticker.dispose();
     _ticker = createTicker((Duration elapsed) {
       _elapsedTime = elapsed;
       _getUpdatedAngles(
@@ -406,7 +402,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     if (widget.children.isEmpty) return;
 
     // Find the index with the zTranslation closest to -1.0
-    (int, double) indexAndZTranslation = (0, 0);
+    (int, double) indexAndZTranslation = (0, double.infinity);
     for (int i = 0; i < widget.children.length; i++) {
       double zTranslation = getZTranslation(i);
       if (zTranslation < indexAndZTranslation.$2) {
@@ -416,19 +412,54 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
     await bringItemIntoFocus(indexAndZTranslation.$1);
   }
 
-  // This function should bring the item to the center of the carousel,
-  // to the closest location to the user.
-  // It could be implemented in different ways, that is, in what axis
-  // position should the carousel come to rest in?
-  // We can add more customization options later for the user to define the behaviour.
-  // TODO: FIXXXXXXX
+  // if pitch and yaw are between 45 and 135 or between 225 and 315 degrees
+  bool get carouselIsMoreVertThanHoriz =>
+      ((pitchAngleController.value > math.pi / 4 &&
+              pitchAngleController.value < math.pi - (math.pi / 4)) ||
+          (pitchAngleController.value > math.pi + (math.pi / 4) &&
+              pitchAngleController.value < (math.pi * 2) - (math.pi / 4))) &&
+      ((yawAngleController.value > math.pi / 4 &&
+              yawAngleController.value < math.pi - (math.pi / 4)) ||
+          (yawAngleController.value > math.pi + (math.pi / 4) &&
+              yawAngleController.value < (math.pi * 2) - (math.pi / 4)));
+
   Future<void> bringItemIntoFocus(int index) async {
-    await animateTo(
+    if (_ticker.isActive) {
+      _ticker.stop();
+    }
+
+    final List<Future> futures = [];
+
+    futures.add(animateTo(
       angleController: rollAngleController,
-      newAngle:
-          ((math.pi * 2) - (index * _stepAngle) + widget.roll.initialValue) %
-              (2 * math.pi),
-    );
+      newAngle: UtilFunctions.normalizeDegreeInRadians(
+        (math.pi * 2) -
+            (index * _stepAngle) +
+            (carouselIsMoreVertThanHoriz ? -math.pi / 2 : 0),
+      ),
+    ));
+
+    if (carouselIsMoreVertThanHoriz) {
+      futures.add(animateTo(
+        angleController: yawAngleController,
+        newAngle: math.pi / 2,
+      ));
+      futures.add(animateTo(
+        angleController: pitchAngleController,
+        newAngle: math.pi / 2,
+      ));
+    } else {
+      futures.add(animateTo(
+        angleController: yawAngleController,
+        newAngle: 0,
+      ));
+      futures.add(animateTo(
+        angleController: pitchAngleController,
+        newAngle: 0,
+      ));
+    }
+
+    await Future.wait(futures);
   }
 
   // Future<void> animateToPreviousStep() async {
@@ -502,7 +533,9 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
       return;
     }
 
-    _ticker.stop();
+    if (_ticker.isActive) {
+      _ticker.stop();
+    }
     initialDragPosition = (
       details.globalPosition.dx,
       details.globalPosition.dy,
@@ -510,7 +543,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   }
 
   void onDragUpdate(DragUpdateDetails details) {
-    if (widget.dragBehaviour == DragBehaviour.none) {
+    if (widget.dragBehaviour == DragBehaviour.none || widget.radius == 0) {
       return;
     }
 
@@ -530,15 +563,7 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
         (dragDistance.$2 * widget.dragSensitivity) / widget.radius;
 
     if (horizDragsRoll == null) {
-      if (((pitchAngleController.value > math.pi / 4 &&
-                  pitchAngleController.value < math.pi - (math.pi / 4)) ||
-              (pitchAngleController.value > math.pi + (math.pi / 4) &&
-                  pitchAngleController.value <
-                      (math.pi * 2) - (math.pi / 4))) &&
-          ((yawAngleController.value > math.pi / 4 &&
-                  yawAngleController.value < math.pi - (math.pi / 4)) ||
-              (yawAngleController.value > math.pi + (math.pi / 4) &&
-                  yawAngleController.value < (math.pi * 2) - (math.pi / 4)))) {
+      if (carouselIsMoreVertThanHoriz) {
         horizDragsRoll = false;
       } else {
         horizDragsRoll = true;
@@ -592,23 +617,21 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   double getRollOffset(int index) =>
       (rollAngleController.value + (index * _stepAngle)) % (2 * math.pi);
 
-  // The translation of the objects in the carousel is represented by the
-  // last column of Transformations.transformation1.
-  vector_math.Matrix3 getPositionMatrix(int index) =>
-      Transformations.transformation1(
+  vector_math.Vector3 getPositionVector(int index) =>
+      Transformations.positionTransformation(
         rollAngle: getRollOffset(index),
         pitchAngle: pitchAngleController.value,
         yawAngle: yawAngleController.value,
       );
 
   double getXTranslation(int index) =>
-      -widget.radius * getPositionMatrix(index).entry(0, 2);
+      -widget.radius * getPositionVector(index).x;
 
   double getYTranslation(int index) =>
-      -widget.radius * getPositionMatrix(index).entry(1, 2);
+      -widget.radius * getPositionVector(index).y;
 
   double getZTranslation(int index) =>
-      -widget.radius * getPositionMatrix(index).entry(2, 2);
+      -widget.radius * getPositionVector(index).z;
 
   @override
   Widget build(BuildContext context) {
@@ -619,12 +642,12 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
           yawAngleController,
         ]),
         builder: (context, child) {
-          // To render them in order of how far they are to the screen
-          List<(int, double)> indexToZDistance = [];
-          for (int i = 0; i < widget.children.length; i++) {
-            indexToZDistance.add((i, getZTranslation(i)));
-          }
-          indexToZDistance.sort((a, b) => b.$2.compareTo(a.$2));
+          // To render them in order of how far they are to the screen.
+          // The closest point to the screen is -radius and the farthest from the screen is +radius.
+          List<(int index, double z)> indexToZDistance = List.generate(
+            widget.children.length,
+            (index) => (index, getZTranslation(index)),
+          )..sort((a, b) => b.$2.compareTo(a.$2));
 
           int getIndexOf(int index) => indexToZDistance[index].$1;
 
