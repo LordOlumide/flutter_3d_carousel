@@ -13,7 +13,7 @@ class Example1 extends StatelessWidget {
         dragEndBehavior: DragEndBehavior.snapToNearest,
         backgroundTapBehavior: BackgroundTapBehavior.startAndSnapToNearest,
         childTapBehavior: ChildTapBehavior.transparent,
-        isDragInteractive: true,
+        dragBehaviour: true,
         hideForeground: false,
         clockwise: false,
         backgroundBlur: 3,
@@ -67,7 +67,7 @@ class _Example2State extends State<Example2> {
               backgroundTapBehavior:
                   BackgroundTapBehavior.startAndSnapToNearest,
               childTapBehavior: ChildTapBehavior.stopAndSnapToChild,
-              isDragInteractive: true,
+              dragBehaviour: true,
               hideForeground: false,
               clockwise: false,
               backgroundBlur: 3,

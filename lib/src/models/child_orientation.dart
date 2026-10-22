@@ -1,4 +1,3 @@
-//TODO: Document and implement
 import 'package:equatable/equatable.dart';
 
 /// This determines what direction the objects in the carousel face.

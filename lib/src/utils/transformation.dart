@@ -3,8 +3,6 @@ import 'dart:math' as math;
 import 'package:flutter_3d_carousel/flutter_3d_carousel.dart';
 import 'package:vector_math/vector_math_64.dart' as vector_math;
 
-// TODO: Write the calculations for these in an explainer article
-
 /// The naming here is [column number][row number].
 ///
 sealed class Transformations {

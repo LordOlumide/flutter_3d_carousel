@@ -6,6 +6,6 @@ enum DragEndBehavior {
   /// The carousel will maintain its exact current position without any adjustment.
   remainFrozen,
 
-  /// The carousel will continue with the default behaviour.
-  returnToDefault,
+  /// The carousel will continue spinning with the default behaviour from the current position .
+  continueSpinning,
 }

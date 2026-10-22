@@ -9,13 +9,22 @@ import 'package:flutter_3d_carousel/src/utils/utils.dart';
 
 part 'sub_widget.dart';
 
+// TODO: Write article including the calculations
 // TODO: Show guiding axes
+// TODO: Handle all Gesture Responses
+// TODO: Programmatically freeze or move to the next and previous object in the carousel
+
+// TODO: The children are rotating in the Y and X axis but it is not showing the perspective difference.
+// The issue is from the flutter framework, as far as I can tell.
+// Check out this issue for more info: https://github.com/flutter/flutter/issues/194632
+
+// TODO: Handle snapping to an itme
 
 /// A 3D carousel widget that displays children in a circular arrangement with
 /// 3D perspective effects and interactive rotation.
 ///
 /// There are 3 degrees of movement: roll, pitch, yaw.
-/// To understand how they work, check out this article // TODO: Write article
+/// To understand how they work, check out this article
 ///
 /// **Note:** The [CarouselChild.onTap] will be called no matter what value is assigned to [childTapBehavior].
 /// The [childTapBehavior] defines how the carousel will animate when a child is tapped.
@@ -41,7 +50,7 @@ class CarouselWidget3D extends StatefulWidget {
   /// Whether the carousel should respond to drag gestures.
   ///
   /// Defaults to true
-  final bool isDragInteractive;
+  final DragBehaviour dragBehaviour;
 
   /// Determines how the carousel behaves after a drag interaction ends. See [DragEndBehavior] for available options.
   ///
@@ -140,7 +149,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.childScale = 1.0,
     this.backgroundTapBehavior = BackgroundTapBehavior.none,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
-    this.isDragInteractive = true,
+    this.dragBehaviour = DragBehaviour.twoDimensional,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
     this.hideForeground = false,
     this.hideBackground = false,
@@ -169,7 +178,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.childScale = 1.0,
     this.backgroundTapBehavior = BackgroundTapBehavior.none,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
-    this.isDragInteractive = true,
+    this.dragBehaviour = DragBehaviour.oneDimensional,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
     this.hideForeground = false,
     this.hideBackground = false,
@@ -197,7 +206,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.childScale = 1.0,
     this.backgroundTapBehavior = BackgroundTapBehavior.none,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
-    this.isDragInteractive = true,
+    this.dragBehaviour = DragBehaviour.oneDimensional,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
     this.hideForeground = false,
     this.hideBackground = false,
@@ -221,10 +230,6 @@ class CarouselWidget3D extends StatefulWidget {
   @override
   State<CarouselWidget3D> createState() => _CarouselWidget3DState();
 }
-
-// TODO: Handle all Gesture Responses
-
-// TODO: Programmatically freeze or move to the next and previous object in the carousel
 
 class _CarouselWidget3DState extends State<CarouselWidget3D>
     with TickerProviderStateMixin {
@@ -489,7 +494,15 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
   (double, double) initialDragPosition = (0, 0);
 
+  // Whether the horizontal drag gesture changes the roll or the pitch
+  bool? horizDragsRoll;
+
   void onDragStart(DragStartDetails details) {
+    if (widget.dragBehaviour == DragBehaviour.none) {
+      return;
+    }
+
+    _ticker.stop();
     initialDragPosition = (
       details.globalPosition.dx,
       details.globalPosition.dy,
@@ -497,6 +510,10 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
   }
 
   void onDragUpdate(DragUpdateDetails details) {
+    if (widget.dragBehaviour == DragBehaviour.none) {
+      return;
+    }
+
     final (double, double) dragDistance = (
       initialDragPosition.$1 - details.globalPosition.dx,
       initialDragPosition.$2 - details.globalPosition.dy,
@@ -508,25 +525,65 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
     // Length of an arc = radius * central angle in radians
     final double horizontalAngleChange =
-        (dragDistance.$1 / widget.radius) * widget.dragSensitivity;
+        (dragDistance.$1 * widget.dragSensitivity) / widget.radius;
     final double verticalAngleChange =
-        (dragDistance.$1 / widget.radius) * widget.dragSensitivity;
+        (dragDistance.$2 * widget.dragSensitivity) / widget.radius;
 
-    // TODO:
-    // animateTo(
-    //   (thetaController.value - angleInRadian) % (2 * math.pi),
-    //   0,
-    // );
+    if (horizDragsRoll == null) {
+      if (((pitchAngleController.value > math.pi / 4 &&
+                  pitchAngleController.value < math.pi - (math.pi / 4)) ||
+              (pitchAngleController.value > math.pi + (math.pi / 4) &&
+                  pitchAngleController.value <
+                      (math.pi * 2) - (math.pi / 4))) &&
+          ((yawAngleController.value > math.pi / 4 &&
+                  yawAngleController.value < math.pi - (math.pi / 4)) ||
+              (yawAngleController.value > math.pi + (math.pi / 4) &&
+                  yawAngleController.value < (math.pi * 2) - (math.pi / 4)))) {
+        horizDragsRoll = false;
+      } else {
+        horizDragsRoll = true;
+      }
+    }
+
+    if (horizDragsRoll! == true) {
+      rollAngleController.value = UtilFunctions.normalizeDegreeInRadians(
+        rollAngleController.value - horizontalAngleChange,
+      );
+      if (widget.dragBehaviour == DragBehaviour.twoDimensional) {
+        pitchAngleController.value = UtilFunctions.normalizeDegreeInRadians(
+          pitchAngleController.value + verticalAngleChange,
+        );
+      }
+    } else {
+      rollAngleController.value = UtilFunctions.normalizeDegreeInRadians(
+        rollAngleController.value + verticalAngleChange,
+      );
+      if (widget.dragBehaviour == DragBehaviour.twoDimensional) {
+        yawAngleController.value = UtilFunctions.normalizeDegreeInRadians(
+          yawAngleController.value - horizontalAngleChange,
+        );
+      }
+    }
   }
 
   void onDragEnd(DragEndDetails details) {
+    if (widget.dragBehaviour == DragBehaviour.none) {
+      return;
+    }
+
+    horizDragsRoll = null;
+    initialDragPosition = (
+      details.globalPosition.dx,
+      details.globalPosition.dy,
+    );
+
     switch (widget.dragEndBehavior) {
       case DragEndBehavior.remainFrozen:
         break;
       case DragEndBehavior.snapToNearest:
         animateToClosestStep();
         break;
-      case DragEndBehavior.returnToDefault:
+      case DragEndBehavior.continueSpinning:
         _restartTicker();
         break;
     }
@@ -573,19 +630,17 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
 
           return GestureDetector(
             onTap: _onBackgroundTap,
-            onHorizontalDragStart:
-                widget.isDragInteractive ? onDragStart : null,
-            onHorizontalDragUpdate:
-                widget.isDragInteractive ? onDragUpdate : null,
-            onHorizontalDragEnd: widget.isDragInteractive ? onDragEnd : null,
-            onVerticalDragStart: widget.isDragInteractive ? onDragStart : null,
-            onVerticalDragUpdate:
-                widget.isDragInteractive ? onDragUpdate : null,
-            onVerticalDragEnd: widget.isDragInteractive ? onDragEnd : null,
+            onHorizontalDragStart: onDragStart,
+            onVerticalDragStart: onDragStart,
+            onHorizontalDragUpdate: onDragUpdate,
+            onVerticalDragUpdate: onDragUpdate,
+            onHorizontalDragEnd: onDragEnd,
+            onVerticalDragEnd: onDragEnd,
             child: ClipRect(
               clipBehavior: widget.clipBehavior,
               child: SizedBox(
                 width: double.infinity,
+                height: double.infinity,
                 child: Stack(
                   alignment: Alignment.center,
                   clipBehavior: Clip.none,

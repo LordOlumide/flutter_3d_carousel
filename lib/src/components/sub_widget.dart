@@ -119,32 +119,16 @@ class _SubWidget extends StatelessWidget {
       );
     }
 
-    // TODO: The object is moving in the z dimension in 3d space but the perspectiveStrength is not
-    // applied to the motion.
-    // The object is also rotating in the Y axis but it is also not showing
-
     return Transform(
       alignment: Alignment.center,
-      transform: matrix4,
+      // transform: matrix4,
 
-      // transform: Matrix4.identity()
-      //   // perspectiveStrength must be set first
-      //   ..setEntry(3, 2, perspectiveStrength)
-      //   ..translateByDouble(
-      //     xTranslation,
-      //     yTranslation,
-      //     zTranslation,
-      //     1.0,
-      //   )
-      //   ..rotateY(math.pi / 10)
-      //   // ..setRotation(
-      //   //   Transformation.getTransformationMatrix(
-      //   //     rollAngle: rollAngle,
-      //   //     pitchAngle: pitchAngle,
-      //   //     yawAngle: yawAngle,
-      //   //   ),
-      //   // )
-      //   ..scaleByDouble(scale, scale, scale, 1.0),
+      transform: Matrix4.identity()
+        // perspectiveStrength must be set first
+        ..setEntry(3, 2, perspectiveStrength)
+        ..translateByDouble(xTranslation, yTranslation, zTranslation, 1)
+        ..setRotation(matrix4.getRotation())
+        ..scaleByDouble(scale, scale, scale, 1.0),
       child: GestureDetector(
         onTap: onTap,
         child: child,
