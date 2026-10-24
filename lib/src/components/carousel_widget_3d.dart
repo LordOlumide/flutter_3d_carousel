@@ -28,7 +28,7 @@ class CarouselWidget3D extends StatefulWidget {
 
   /// Determines how the carousel behaves after the background is tapped. See [BackgroundTapBehavior] for available options.
   ///
-  /// Defaults to [BackgroundTapBehavior.none]
+  /// Defaults to [BackgroundTapBehavior.startOrSnapToNearest]
   final BackgroundTapBehavior backgroundTapBehavior;
 
   /// Determines how the carousel behaves after a child is tapped. See [ChildTapBehavior] for available options.
@@ -68,12 +68,12 @@ class CarouselWidget3D extends StatefulWidget {
   /// Defaults to [OrientedBackingCenter].
   final ChildOrientation childOrientation;
 
-  /// This function sets the rotation of the axis around its own longitudinal line.
+  /// This function sets the rotation of the axis around its Y axis.
   ///
   /// Defaults to [ConstantInputFunction] with a value of 0.
   final InputFunction roll;
 
-  /// This function sets the tilt or elevation relative to the vertical axis.
+  /// This function sets the tilt or elevation relative to the vertical X axis.
   ///
   /// Defaults to [ConstantInputFunction] with a value of 0.
   final InputFunction pitch;
@@ -136,7 +136,7 @@ class CarouselWidget3D extends StatefulWidget {
     super.key,
     required this.radius,
     this.childScale = 1.0,
-    this.backgroundTapBehavior = BackgroundTapBehavior.none,
+    this.backgroundTapBehavior = BackgroundTapBehavior.startOrSnapToNearest,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
     this.dragBehaviour = DragBehaviour.twoDimensional,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
@@ -169,7 +169,7 @@ class CarouselWidget3D extends StatefulWidget {
     super.key,
     required this.radius,
     this.childScale = 1.0,
-    this.backgroundTapBehavior = BackgroundTapBehavior.none,
+    this.backgroundTapBehavior = BackgroundTapBehavior.startOrSnapToNearest,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
     this.dragBehaviour = DragBehaviour.oneDimensional,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
@@ -202,7 +202,7 @@ class CarouselWidget3D extends StatefulWidget {
     super.key,
     required this.radius,
     this.childScale = 1.0,
-    this.backgroundTapBehavior = BackgroundTapBehavior.none,
+    this.backgroundTapBehavior = BackgroundTapBehavior.startOrSnapToNearest,
     this.childTapBehavior = ChildTapBehavior.stopAndSnapToChild,
     this.dragBehaviour = DragBehaviour.oneDimensional,
     this.dragEndBehavior = DragEndBehavior.snapToNearest,
@@ -687,7 +687,11 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                             perspectiveStrength: widget.perspectiveStrength,
                             xTranslation: getXTranslation(getIndexOf(i)),
                             yTranslation: getYTranslation(getIndexOf(i)),
-                            zTranslation: getZTranslation(getIndexOf(i)),
+                            // widget.radius is added to shift the objects back by one radius.
+                            // This is because the default z translation moves the children closer to
+                            // the screen by 1 radius so the scale of the objects is twice as big.
+                            zTranslation:
+                                widget.radius + getZTranslation(getIndexOf(i)),
                             rollAngle: getRollOffset(getIndexOf(i)),
                             pitchAngle: pitchAngleController.value,
                             yawAngle: yawAngleController.value,
@@ -726,7 +730,8 @@ class _CarouselWidget3DState extends State<CarouselWidget3D>
                             perspectiveStrength: widget.perspectiveStrength,
                             xTranslation: getXTranslation(getIndexOf(i)),
                             yTranslation: getYTranslation(getIndexOf(i)),
-                            zTranslation: getZTranslation(getIndexOf(i)),
+                            zTranslation:
+                                widget.radius + getZTranslation(getIndexOf(i)),
                             rollAngle: getRollOffset(getIndexOf(i)),
                             pitchAngle: pitchAngleController.value,
                             yawAngle: yawAngleController.value,

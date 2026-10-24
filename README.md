@@ -8,6 +8,8 @@ Check out the article for more information and examples to understand how the pa
 
 TODO: Link the article
 
+NOTE: The BoxConstraint will force an infinite width and height if you don't constrain the carousel. Give it explicit dimensions or use a widget like Expanded to avoid this error.
+
 ## Example:
 
 ### Basic Example:
@@ -278,8 +280,7 @@ List<Color> colors = [
 <img src="assets/gifs/recording_3.gif" width="350" alt="Screen recording of Example 3"> 
 
 ## Issues
-- **Major issue:** The children are rotating in the Y and X axis but it is not showing the perspective difference. This is why the objects in the carousel may not look perfectly aligned at the sides. The issue is from the flutter framework, as far as I can tell. Check out this issue for more info: https://github.com/flutter/flutter/issues/194632.
-- Snapping should bring the item to the center of the carousel, to the closest location to the user. It can be implemented in different ways, that is, in what axis position should the carousel come to rest in? For now, I am implementing only snapping to horizontal and vertical axes. We can add more customization options later for the user to define the behaviour. Perfect is the enemy of done.
+- Snapping should bring the item to the center of the carousel, to the closest location to the user. It can be implemented in different ways, that is, in what axis position should the carousel come to rest in? For now, only snapping to horizontal and vertical axes are implemented. We can add more customization options later for the user to define the behaviour. Perfect is the enemy of done.
 - Are there too many properties? Is there a way to group them?
 - The carousel can be more efficient algorithmically.
 

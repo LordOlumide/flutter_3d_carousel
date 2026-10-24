@@ -92,7 +92,7 @@ class _SubWidget extends StatelessWidget {
         0,
         0,
         1,
-        perspectiveStrength,
+        0,
         xTranslation,
         yTranslation,
         zTranslation,
@@ -103,32 +103,25 @@ class _SubWidget extends StatelessWidget {
         matrix3!.entry(0, 0),
         matrix3.entry(1, 0),
         matrix3.entry(2, 0),
-        0,
+        perspectiveStrength * matrix3.entry(2, 0),
         matrix3.entry(0, 1),
         matrix3.entry(1, 1),
         matrix3.entry(2, 1),
-        0,
+        perspectiveStrength * matrix3.entry(2, 1),
         matrix3.entry(0, 2),
         matrix3.entry(1, 2),
         matrix3.entry(2, 2),
-        perspectiveStrength,
+        perspectiveStrength * matrix3.entry(2, 2),
         xTranslation,
         yTranslation,
         zTranslation,
-        1,
+        perspectiveStrength * zTranslation + 1,
       );
     }
 
     return Transform(
       alignment: Alignment.center,
-      // transform: matrix4,
-
-      transform: Matrix4.identity()
-        // perspectiveStrength must be set first
-        ..setEntry(3, 2, perspectiveStrength)
-        ..translateByDouble(xTranslation, yTranslation, zTranslation, 1)
-        ..setRotation(matrix4.getRotation())
-        ..scaleByDouble(scale, scale, scale, 1.0),
+      transform: matrix4..scaleByDouble(scale, scale, scale, 1.0),
       child: GestureDetector(
         onTap: onTap,
         child: child,

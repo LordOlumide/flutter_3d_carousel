@@ -136,6 +136,7 @@ class IntermittentInputFunction extends InputFunction {
           elapsedTime: Duration(milliseconds: activeMs),
         );
 
+    // TODO: FIXXXXXX
     return UtilFunctions.normalizeDegreeInRadians(angle);
   }
 
