@@ -81,36 +81,36 @@ class _SubWidget extends StatelessWidget {
     late final vector_math.Matrix4 matrix4;
     if (childOrientation is OrientedFacingScreen) {
       matrix4 = Matrix4(
-        1,
+        1 * scale,
         0,
         0,
         0,
         0,
-        1,
+        1 * scale,
         0,
         0,
         0,
         0,
-        1,
-        0,
+        1 * scale,
+        perspectiveStrength,
         xTranslation,
         yTranslation,
         zTranslation,
-        1,
+        perspectiveStrength * zTranslation + 1,
       );
     } else {
       matrix4 = Matrix4(
-        matrix3!.entry(0, 0),
+        matrix3!.entry(0, 0) * scale,
         matrix3.entry(1, 0),
         matrix3.entry(2, 0),
         perspectiveStrength * matrix3.entry(2, 0),
         matrix3.entry(0, 1),
-        matrix3.entry(1, 1),
+        matrix3.entry(1, 1) * scale,
         matrix3.entry(2, 1),
         perspectiveStrength * matrix3.entry(2, 1),
         matrix3.entry(0, 2),
         matrix3.entry(1, 2),
-        matrix3.entry(2, 2),
+        matrix3.entry(2, 2) * scale,
         perspectiveStrength * matrix3.entry(2, 2),
         xTranslation,
         yTranslation,
@@ -121,7 +121,7 @@ class _SubWidget extends StatelessWidget {
 
     return Transform(
       alignment: Alignment.center,
-      transform: matrix4..scaleByDouble(scale, scale, scale, 1.0),
+      transform: matrix4,
       child: GestureDetector(
         onTap: onTap,
         child: child,

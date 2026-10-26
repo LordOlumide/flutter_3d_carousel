@@ -127,16 +127,17 @@ class IntermittentInputFunction extends InputFunction {
 
     final activeElapsedMs = (elapsedTime - timeOffset).inMilliseconds;
     final timeInCycle = activeElapsedMs % cycleMs;
+    final int noOfCycles = activeElapsedMs ~/ cycleMs;
 
     // During the pause, retain the angle reached at the end of the movement interval.
-    final activeMs = timeInCycle.clamp(0, moveMs);
+    final activeMsInCycle = timeInCycle.clamp(0, moveMs);
 
     final angle = baseValue +
         motionFunction.getCurrentValue(
-          elapsedTime: Duration(milliseconds: activeMs),
+          elapsedTime:
+              Duration(milliseconds: (noOfCycles * moveMs) + activeMsInCycle),
         );
 
-    // TODO: FIXXXXXX
     return UtilFunctions.normalizeDegreeInRadians(angle);
   }
 
