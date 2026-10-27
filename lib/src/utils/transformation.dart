@@ -50,7 +50,8 @@ sealed class Transformations {
     final double e_21 = sp * cr;
     final double e_22 = -(sy * sr) + (cy * cp * cr);
 
-    return vector_math.Matrix3(e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
+    return vector_math.Matrix3(
+        e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
   }
 
   /// This is the transformation that corresponds to [OrientedWithXTilt].
@@ -81,7 +82,8 @@ sealed class Transformations {
     final double e_21 = -(cp * sa) + (sp * cr * ca);
     final double e_22 = (cy * sp * sa) - (sy * sr * ca) + (cy * cp * cr * ca);
 
-    return vector_math.Matrix3(e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
+    return vector_math.Matrix3(
+        e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
   }
 
   /// This is the transformation that corresponds to [OrientedWithYTilt].
@@ -124,7 +126,8 @@ sealed class Transformations {
         (sy * sr * ca) +
         (sy * cp * cr * ca);
 
-    return vector_math.Matrix3(e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
+    return vector_math.Matrix3(
+        e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
   }
 
   /// This is the transformation that corresponds to [OrientedWithZTilt].
@@ -155,6 +158,7 @@ sealed class Transformations {
     final double e_21 = sp * cr;
     final double e_22 = -(sy * sr) + (cy * cp * cr);
 
-    return vector_math.Matrix3(e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
+    return vector_math.Matrix3(
+        e_00, e_01, e_02, e_10, e_11, e_12, e_20, e_21, e_22);
   }
 }

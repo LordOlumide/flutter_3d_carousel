@@ -30,7 +30,7 @@ class Example1 extends StatelessWidget {
                     roll: LinearInputFunction(gradient: math.pi / 12),
                     children: List.generate(
                       colors.length,
-                          (index) => CarouselChild(
+                      (index) => CarouselChild(
                         child: Container(
                           width: MediaQuery.sizeOf(context).width / 2,
                           height: MediaQuery.sizeOf(context).height / 4,
@@ -60,7 +60,7 @@ class Example1 extends StatelessWidget {
                     roll: LinearInputFunction(gradient: math.pi / 12),
                     children: List.generate(
                       colors.length,
-                          (index) => CarouselChild(
+                      (index) => CarouselChild(
                         child: Container(
                           width: MediaQuery.sizeOf(context).width / 2,
                           height: MediaQuery.sizeOf(context).height / 4,
@@ -321,7 +321,7 @@ class _Example3State extends State<Example3> {
                     ),
                     children: List.generate(
                       20,
-                          (index) => CarouselChild(
+                      (index) => CarouselChild(
                         child: Container(
                           width: 50,
                           height: 50,
