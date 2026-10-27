@@ -158,11 +158,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.background,
     this.core,
     required this.children,
-  })  : assert(radius > 0, 'Carousel radius should be greater than zero'),
-        assert(
-          snapTimeInMillis > 0,
-          'snapTimeInMillis must be greater than zero',
-        );
+  }) : assert(snapTimeInMillis >= 0);
 
   /// A constructor that gives a straightforward horizontal carousel animation.
   const CarouselWidget3D.horizontal({
@@ -189,11 +185,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.background,
     this.core,
     required this.children,
-  })  : assert(radius > 0, 'Carousel radius should be greater than zero'),
-        assert(
-          snapTimeInMillis > 0,
-          'snapTimeInMillis must be greater than zero',
-        ),
+  })  : assert(snapTimeInMillis >= 0),
         pitch = const ConstantInputFunction(value: 0),
         yaw = const ConstantInputFunction(value: 0);
 
@@ -221,11 +213,7 @@ class CarouselWidget3D extends StatefulWidget {
     this.background,
     this.core,
     required this.children,
-  })  : assert(radius > 0, 'Carousel radius should be greater than zero'),
-        assert(
-          snapTimeInMillis > 0,
-          'snapTimeInMillis must be greater than zero',
-        ),
+  })  : assert(snapTimeInMillis >= 0),
         pitch = const ConstantInputFunction(value: math.pi / 2),
         yaw = const ConstantInputFunction(value: math.pi / 2),
         childOrientation = const OrientedWithZTilt(math.pi / 2);

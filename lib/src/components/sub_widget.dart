@@ -122,10 +122,7 @@ class _SubWidget extends StatelessWidget {
     return Transform(
       alignment: Alignment.center,
       transform: matrix4,
-      child: GestureDetector(
-        onTap: onTap,
-        child: child,
-      ),
+      child: GestureDetector(onTap: onTap, child: child),
     );
   }
 }

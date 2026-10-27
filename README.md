@@ -280,9 +280,11 @@ List<Color> colors = [
 <img src="assets/gifs/recording_3.gif" width="350" alt="Screen recording of Example 3"> 
 
 ## Issues
+- Major issue: During testing, I came across this error: `The third row and third column of a transform matrix for pointer events must be Vector4(0, 0, 1, 0) to ensure that a transformed point is directly under the pointing device. Did you forget to run the paint matrix through PointerEvent.removePerspectiveTransform? The provided matrix is:`. The explanation I found is that 'Because hit-testing relies on a flat 2D coordinate system to map your physical pointer (finger or mouse) down to an element, the framework enforces that the third row and third column of the matrix must equal Vector4(0, 0, 1, 0)'. 
 - Snapping should bring the item to the center of the carousel, to the closest location to the user. It can be implemented in different ways, that is, in what axis position should the carousel come to rest in? For now, only snapping to horizontal and vertical axes are implemented. We can add more customization options later for the user to define the behaviour. Perfect is the enemy of done.
 - Are there too many properties? Is there a way to group them?
 - The carousel can be more efficient algorithmically.
+- Make it possible to use ChildOrientation OrientedWithTilt and OrientedFacingScreen at the same time.
 
 ## Ideas for features to add:
 
