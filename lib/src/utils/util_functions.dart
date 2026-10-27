@@ -1,7 +1,5 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
-
 /// A collection of utility functions for common mathematical and color operations.
 ///
 /// This class provides static helper methods:
