@@ -13,7 +13,7 @@ part 'sub_widget.dart';
 /// 3D perspective effects and interactive rotation.
 ///
 /// There are 3 degrees of movement: roll, pitch, yaw.
-/// To understand how they work, check out this article: TODO: Link article here
+/// To understand how they work, check out this article: https://medium.com/@olumideolubosede/flutter-3d-carousel-explainer-article-69686e0ecf9c
 ///
 /// **Note:** The [CarouselChild.onTap] will be called no matter what value is assigned to [childTapBehavior].
 /// The [childTapBehavior] defines how the carousel will animate when a child is tapped.
