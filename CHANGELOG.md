@@ -1,6 +1,11 @@
 
 
-## Version 3.0.0 -
+## Version 3.0.1 - 2026-10-28
+
+### Changes
+- Fixed error in 'child_orientations_comparism.gif' example asset gif.
+
+## Version 3.0.0 - 2026-10-27
 
 ### Changes
 - Revamped the entire package. The carousel now has 3 degrees of motion: roll, pitch, and yaw.
